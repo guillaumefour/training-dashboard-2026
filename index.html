@@ -13,7 +13,7 @@
   --text:#e2e8f0; --muted:#8892a4;
   --run:#f97316; --bike:#06b6d4; --swim:#818cf8; --other:#6b7280;
   --key:#ef4444; --imp:#f59e0b; --opt:#6b7280; --green:#22c55e;
-  --radius:12px;
+  --strava:#fc4c02; --radius:12px;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
@@ -36,8 +36,10 @@ header h1{font-size:1.1rem;font-weight:700;flex:1;min-width:120px}
 .sync-badge.ok{border-color:var(--green);color:var(--green)}
 .sync-badge.err{border-color:var(--key);color:var(--key)}
 #last-updated{font-size:.7rem;color:var(--muted)}
-.btn-import{background:var(--green);color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:.8rem;font-weight:600;cursor:pointer;white-space:nowrap}
-.btn-import:hover{opacity:.85}
+.btn-strava{background:var(--strava);color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:.8rem;font-weight:600;cursor:pointer;white-space:nowrap}
+.btn-strava:hover{opacity:.85}
+.btn-import{background:var(--surface2);color:var(--muted);border:1px solid var(--border);border-radius:8px;padding:8px 14px;font-size:.8rem;font-weight:600;cursor:pointer;white-space:nowrap}
+.btn-import:hover{color:var(--text);border-color:var(--text)}
 .btn-signout{background:transparent;color:var(--muted);border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-size:.8rem;cursor:pointer}
 .btn-signout:hover{color:var(--text);border-color:var(--text)}
 
@@ -116,9 +118,7 @@ tr:hover td{background:var(--surface2)}
 .session-card.done{opacity:.5}
 .session-card.done::after{content:'✓ Done';position:absolute;top:10px;right:12px;font-size:.7rem;color:var(--green);font-weight:700}
 .sc-priority{font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px}
-.sc-priority.key{color:var(--key)}
-.sc-priority.imp{color:var(--imp)}
-.sc-priority.opt{color:var(--opt)}
+.sc-priority.key{color:var(--key)}.sc-priority.imp{color:var(--imp)}.sc-priority.opt{color:var(--opt)}
 .sc-sport{font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;margin-bottom:3px}
 .sc-sport.run{color:var(--run)}.sc-sport.bike{color:var(--bike)}.sc-sport.swim{color:var(--swim)}
 .sc-title{font-size:.95rem;font-weight:700;margin-bottom:3px}
@@ -128,7 +128,14 @@ tr:hover td{background:var(--surface2)}
 .zone-chips{display:flex;gap:4px;flex-wrap:wrap}
 .zone-chip{font-size:.65rem;padding:2px 7px;border-radius:10px;background:var(--surface2);border:1px solid var(--border);color:var(--muted)}
 
-/* IMPORT */
+/* IMPORT / STRAVA */
+.strava-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px 24px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.strava-box .sb-info h3{font-size:1rem;margin-bottom:4px}
+.strava-box .sb-info p{font-size:.82rem;color:var(--muted)}
+.strava-status{font-size:.75rem;padding:3px 10px;border-radius:20px;font-weight:600;margin-top:6px;display:inline-block}
+.strava-status.connected{background:rgba(252,76,2,.15);color:var(--strava)}
+.strava-status.disconnected{background:var(--surface2);color:var(--muted)}
+.strava-actions{display:flex;gap:8px;flex-wrap:wrap}
 .drop-zone{border:2px dashed var(--border);border-radius:var(--radius);padding:40px 20px;text-align:center;cursor:pointer;transition:border-color .2s,background .2s;margin-bottom:16px}
 .drop-zone.dragover{border-color:var(--bike);background:rgba(6,182,212,.05)}
 .drop-zone p{color:var(--muted);font-size:.85rem;margin-top:8px;line-height:1.6}
@@ -136,8 +143,15 @@ tr:hover td{background:var(--surface2)}
 code{font-size:.8em;background:var(--surface2);padding:1px 5px;border-radius:3px}
 #file-input{display:none}
 #import-log{font-size:.8rem;min-height:20px}
+.divider{display:flex;align-items:center;gap:12px;margin:20px 0;color:var(--muted);font-size:.8rem}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--border)}
 .btn-danger{background:transparent;color:var(--key);border:1px solid var(--key);border-radius:8px;padding:8px 16px;font-size:.85rem;cursor:pointer;margin-top:12px}
 .btn-danger:hover{background:rgba(239,68,68,.1)}
+.btn-sm{padding:7px 14px;border-radius:8px;font-size:.8rem;font-weight:600;cursor:pointer;border:none;white-space:nowrap}
+.btn-sm.strava{background:var(--strava);color:#fff}
+.btn-sm.strava:hover{opacity:.85}
+.btn-sm.outline{background:transparent;color:var(--muted);border:1px solid var(--border)}
+.btn-sm.outline:hover{color:var(--text);border-color:var(--text)}
 
 /* ZONES */
 .zones-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px}
@@ -153,7 +167,7 @@ code{font-size:.8em;background:var(--surface2);padding:1px 5px;border-radius:3px
 </head>
 <body>
 
-<!-- ═══════════════════════════════════════════════ AUTH -->
+<!-- ═══ AUTH OVERLAY ═══ -->
 <div id="auth-overlay">
   <div class="auth-card">
     <div style="font-size:2.5rem;margin-bottom:8px">🏅</div>
@@ -166,22 +180,21 @@ code{font-size:.8em;background:var(--surface2);padding:1px 5px;border-radius:3px
   </div>
 </div>
 
-<!-- ═══════════════════════════════════════════════ APP -->
+<!-- ═══ APP ═══ -->
 <div id="app" style="display:none">
 
 <header>
   <h1>🏅 Training Dashboard</h1>
   <span id="sync-badge" class="sync-badge">⟳ Loading…</span>
   <span id="last-updated"></span>
-  <button class="btn-import" onclick="jumpToImport()">⬆ Import Garmin CSV</button>
+  <button class="btn-strava" id="strava-header-btn" onclick="stravaHeaderClick()">🟠 Connect Strava</button>
+  <button class="btn-import" onclick="jumpToImport()">⬆ Import CSV</button>
   <button class="btn-signout" onclick="logout()">Sign out</button>
 </header>
 
 <main>
-  <!-- Race countdowns -->
   <div class="race-scroll" id="race-cards"></div>
 
-  <!-- Stat cards -->
   <div class="stats-grid">
     <div class="stat-card"><div class="s-label">This Week</div><div class="s-val" id="s-wk-hrs">—</div><div class="s-sub" id="s-wk-dist"></div></div>
     <div class="stat-card"><div class="s-label">Activities (7d)</div><div class="s-val" id="s-wk-act">—</div></div>
@@ -190,7 +203,6 @@ code{font-size:.8em;background:var(--surface2);padding:1px 5px;border-radius:3px
     <div class="stat-card"><div class="s-label">Swim (7d)</div><div class="s-val" id="s-swim-hrs">—</div><div class="s-sub" id="s-swim-km"></div></div>
   </div>
 
-  <!-- Charts -->
   <div class="charts-grid">
     <div class="chart-card">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
@@ -209,7 +221,6 @@ code{font-size:.8em;background:var(--surface2);padding:1px 5px;border-radius:3px
     </div>
   </div>
 
-  <!-- Tabs -->
   <div class="tab-bar">
     <button class="tab-btn active" onclick="switchTab('activities')">Activities</button>
     <button class="tab-btn"        onclick="switchTab('plan')">Training Plan</button>
@@ -234,6 +245,24 @@ code{font-size:.8em;background:var(--surface2);padding:1px 5px;border-radius:3px
 
   <!-- Import -->
   <div class="tab-pane" id="tab-import">
+
+    <!-- Strava section -->
+    <div class="strava-box">
+      <div class="sb-info">
+        <h3>🟠 Strava Sync</h3>
+        <p>Automatically import all your activities from Strava.<br>Your Garmin activities already sync there.</p>
+        <span class="strava-status disconnected" id="strava-status-badge">Not connected</span>
+      </div>
+      <div class="strava-actions" id="strava-actions">
+        <button class="btn-sm strava" onclick="connectStrava()">Connect Strava</button>
+      </div>
+    </div>
+
+    <div id="strava-log" style="font-size:.8rem;margin-bottom:12px;min-height:18px"></div>
+
+    <div class="divider">or import manually</div>
+
+    <!-- CSV section -->
     <div class="drop-zone" id="drop-zone"
          onclick="document.getElementById('file-input').click()"
          ondragover="event.preventDefault();this.classList.add('dragover')"
@@ -241,8 +270,8 @@ code{font-size:.8em;background:var(--surface2);padding:1px 5px;border-radius:3px
          ondrop="handleDrop(event)">
       <div style="font-size:2rem">📂</div>
       <strong>Click or drag &amp; drop your Garmin CSV here</strong>
-      <p>Garmin Connect → top-right account menu → Data Management → Export Your Data<br>
-         Unzip the download and use <code>Activities/Activities.csv</code></p>
+      <p>Garmin Connect → account menu → Data Management → Export Your Data<br>
+         Unzip and use <code>Activities/Activities.csv</code></p>
     </div>
     <input type="file" id="file-input" accept=".csv" onchange="handleFileInput(event)">
     <div id="import-log"></div>
@@ -256,14 +285,15 @@ code{font-size:.8em;background:var(--surface2);padding:1px 5px;border-radius:3px
   </div>
 
 </main>
-</div><!-- /#app -->
+</div>
 
 <script>
 // ══════════════════════════════════════════════════════════════
-//  SUPABASE CONFIG  —  paste your values from supabase.com/dashboard → Settings → API
+//  CONFIG
 // ══════════════════════════════════════════════════════════════
 const SUPABASE_URL      = 'https://wvdiisesaijsbgskjaew.supabase.co';
-const SUPABASE_ANON_KEY = 'Rsb_publishable_XILjwS9dbpT4epCIEZPR4w_wq8PZ807';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind2ZGlpc2VzYWlqc2Jnc2tqYWV3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE0OTA1MjAsImV4cCI6MjA4NzA2NjUyMH0.vA2K2cDuVBlbULfpoqdQMqqZgrqr9xTPwLza1dXDJgY';
+const STRAVA_CLIENT_ID  = '204131'; // just the number e.g. 12345
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // ══════════════════════════════════════════════════════════════
@@ -282,36 +312,35 @@ const RACES = [
 const AeT = 145, AnT = 159, midThresh = 152;
 
 const HR_ZONES = [
-  { z:'Z1', label:'Recovery',    lo:0,          hi:133,    display:'< 133 bpm' },
-  { z:'Z2', label:'Aerobic',     lo:133,        hi:AeT,    display:'133–145 bpm' },
-  { z:'Z3', label:'Tempo',       lo:AeT,        hi:midThresh, display:'145–152 bpm' },
-  { z:'Z4', label:'Threshold',   lo:midThresh,  hi:AnT,    display:'152–159 bpm' },
-  { z:'Z5', label:'VO2max/Race', lo:AnT,        hi:999,    display:'> 159 bpm' },
+  { z:'Z1', label:'Recovery',    lo:0,         hi:133,       display:'< 133 bpm' },
+  { z:'Z2', label:'Aerobic',     lo:133,       hi:AeT,       display:'133–145 bpm' },
+  { z:'Z3', label:'Tempo',       lo:AeT,       hi:midThresh, display:'145–152 bpm' },
+  { z:'Z4', label:'Threshold',   lo:midThresh, hi:AnT,       display:'152–159 bpm' },
+  { z:'Z5', label:'VO2max/Race', lo:AnT,       hi:999,       display:'> 159 bpm' },
 ];
 
-// Mutable — updated by calibrateZonesFromData()
 let RUN_ZONES = [
-  { z:'Z1', label:'Recovery',  lo:360,  hi:9999, display:'> 6:00 /km' },
-  { z:'Z2', label:'Aerobic',   lo:310,  hi:360,  display:'5:10–6:00 /km' },
-  { z:'Z3', label:'Tempo',     lo:275,  hi:310,  display:'4:35–5:10 /km' },
-  { z:'Z4', label:'Threshold', lo:250,  hi:275,  display:'4:10–4:35 /km' },
-  { z:'Z5', label:'VO2max',    lo:0,    hi:250,  display:'< 4:10 /km' },
+  { z:'Z1', label:'Recovery',  lo:360, hi:9999, display:'> 6:00 /km' },
+  { z:'Z2', label:'Aerobic',   lo:310, hi:360,  display:'5:10–6:00 /km' },
+  { z:'Z3', label:'Tempo',     lo:275, hi:310,  display:'4:35–5:10 /km' },
+  { z:'Z4', label:'Threshold', lo:250, hi:275,  display:'4:10–4:35 /km' },
+  { z:'Z5', label:'VO2max',    lo:0,   hi:250,  display:'< 4:10 /km' },
 ];
 
 let SWIM_ZONES = [
-  { z:'Z1', label:'Recovery',  lo:130,  hi:9999, display:'> 2:10 /100m' },
-  { z:'Z2', label:'Aerobic',   lo:110,  hi:130,  display:'1:50–2:10 /100m' },
-  { z:'Z3', label:'Tempo',     lo:100,  hi:110,  display:'1:40–1:50 /100m' },
-  { z:'Z4', label:'Threshold', lo:90,   hi:100,  display:'1:30–1:40 /100m' },
-  { z:'Z5', label:'Sprint',    lo:0,    hi:90,   display:'< 1:30 /100m' },
+  { z:'Z1', label:'Recovery',  lo:130, hi:9999, display:'> 2:10 /100m' },
+  { z:'Z2', label:'Aerobic',   lo:110, hi:130,  display:'1:50–2:10 /100m' },
+  { z:'Z3', label:'Tempo',     lo:100, hi:110,  display:'1:40–1:50 /100m' },
+  { z:'Z4', label:'Threshold', lo:90,  hi:100,  display:'1:30–1:40 /100m' },
+  { z:'Z5', label:'Sprint',    lo:0,   hi:90,   display:'< 1:30 /100m' },
 ];
 
 let calibMeta = { run:'seeded from 5:30/km @ 138bpm', swim:'estimated (need 4+ swims)' };
 
-function getFTP()      { return parseFloat(localStorage.getItem('ftp') || '240'); }
-function saveFTP(v)    { localStorage.setItem('ftp', String(v)); renderZones(); }
+function getFTP()   { return parseFloat(localStorage.getItem('ftp') || '240'); }
+function saveFTP(v) { localStorage.setItem('ftp', String(v)); renderZones(); }
 function getBikeZones(ftp) {
-  const r = (lo, hi) => `${Math.round(ftp*lo)}–${Math.round(ftp*hi)}W`;
+  const r = (lo,hi) => `${Math.round(ftp*lo)}–${Math.round(ftp*hi)}W`;
   return [
     { z:'Z1', label:'Recovery',  display:`< ${Math.round(ftp*.55)}W` },
     { z:'Z2', label:'Endurance', display:r(.55,.75) },
@@ -325,89 +354,80 @@ function getBikeZones(ftp) {
 //  SEASON PHASES
 // ══════════════════════════════════════════════════════════════
 const SEASON_PHASES = [
-  { name:'Base Building',        start:'2026-01-05', end:'2026-03-08', targetHrs:7,  recoveryAt:4, taperAt:null,
-    focus:"Building aerobic base across all three sports. Everything easy and conversational." },
-  { name:'Marathon Build',       start:'2026-03-09', end:'2026-04-19', targetHrs:8,  recoveryAt:4, taperAt:null,
-    focus:"Increase run volume. Introduce quality sessions. Maintain bike and swim fitness." },
-  { name:'Prague Marathon Taper',start:'2026-04-20', end:'2026-05-03', targetHrs:5,  recoveryAt:null, taperAt:0,
-    focus:"Reduce volume, keep some sharpness. Trust your training. Stay off your feet." },
-  { name:"Recovery + Bike Focus",start:'2026-05-04', end:'2026-06-14', targetHrs:8,  recoveryAt:3, taperAt:null,
-    focus:"Recover from Prague. Shift emphasis to cycling for L'Étape. Maintain swim base." },
-  { name:"L'Étape Taper",        start:'2026-06-15', end:'2026-06-20', targetHrs:4,  recoveryAt:null, taperAt:0,
-    focus:"Short, sharp efforts. Legs fresh. Stay calm and confident." },
-  { name:'Half IM Build',        start:'2026-06-21', end:'2026-08-23', targetHrs:10, recoveryAt:3, taperAt:null,
-    focus:"Full triathlon training. Brick sessions, open water, build all three sports." },
-  { name:'Zell am See Taper',    start:'2026-08-24', end:'2026-08-30', targetHrs:5,  recoveryAt:null, taperAt:0,
-    focus:"Cut volume sharply. Race-pace sharpeners only. Sleep and eat well." },
-  { name:'Full IM Build',        start:'2026-08-31', end:'2026-10-10', targetHrs:11, recoveryAt:3, taperAt:null,
-    focus:"Big endurance weeks. Long rides, long runs, bricks. Practice race nutrition obsessively." },
-  { name:'ICAN Gandia Taper',    start:'2026-10-11', end:'2026-10-17', targetHrs:4,  recoveryAt:null, taperAt:0,
-    focus:"Trust the work. Rest, sleep, eat. You are ready." },
+  { name:'Base Building',          start:'2026-01-05', end:'2026-03-08', targetHrs:7,  recoveryAt:4,    taperAt:null, focus:"Building aerobic base across all three sports. Keep everything easy and conversational." },
+  { name:'Marathon Build',         start:'2026-03-09', end:'2026-04-19', targetHrs:8,  recoveryAt:4,    taperAt:null, focus:"Increase run volume. Introduce quality sessions. Maintain bike and swim fitness." },
+  { name:'Prague Marathon Taper',  start:'2026-04-20', end:'2026-05-03', targetHrs:5,  recoveryAt:null, taperAt:0,    focus:"Reduce volume, keep some sharpness. Trust your training. Stay off your feet." },
+  { name:"Recovery + Bike Focus",  start:'2026-05-04', end:'2026-06-14', targetHrs:8,  recoveryAt:3,    taperAt:null, focus:"Recover from Prague. Shift emphasis to cycling for L'Étape. Maintain swim base." },
+  { name:"L'Étape Taper",          start:'2026-06-15', end:'2026-06-20', targetHrs:4,  recoveryAt:null, taperAt:0,    focus:"Short, sharp efforts. Legs fresh. Stay calm and confident." },
+  { name:'Half IM Build',          start:'2026-06-21', end:'2026-08-23', targetHrs:10, recoveryAt:3,    taperAt:null, focus:"Full triathlon training. Brick sessions, open water, build all three sports." },
+  { name:'Zell am See Taper',      start:'2026-08-24', end:'2026-08-30', targetHrs:5,  recoveryAt:null, taperAt:0,    focus:"Cut volume sharply. Race-pace sharpeners only. Sleep and eat well." },
+  { name:'Full IM Build',          start:'2026-08-31', end:'2026-10-10', targetHrs:11, recoveryAt:3,    taperAt:null, focus:"Big endurance weeks. Long rides, long runs, bricks. Practice race nutrition obsessively." },
+  { name:'ICAN Gandia Taper',      start:'2026-10-11', end:'2026-10-17', targetHrs:4,  recoveryAt:null, taperAt:0,    focus:"Trust the work. Rest, sleep, eat. You are ready." },
 ];
 
-function mk(id, sport, priority, title, zone, dur, minMins, desc, tip='') {
-  return { id, sport, priority, title, zone, dur, minMins, desc, tip };
+function mk(id,sport,priority,title,zone,dur,minMins,desc,tip='') {
+  return {id,sport,priority,title,zone,dur,minMins,desc,tip};
 }
 
 function getSessions(phaseIdx) {
-  const K='key', I='imp', O='opt';
+  const K='key',I='imp',O='opt';
   switch(phaseIdx) {
     case 0: return [
-      mk('b-lr','run', K,'Long Easy Run',       'Z2',        '1h 30m', 80, "Build your aerobic engine. Keep HR below 145 the entire time. Walk uphills if needed.", "Time on feet is the goal — pace is irrelevant."),
-      mk('b-lb','bike',K,'Long Endurance Ride', 'Z2',        '2h 30m',120, "Steady riding at 55–75% FTP. Cadence 85–95rpm. Practice nutrition every 30–45 min.", "Great time to work out your race nutrition strategy."),
-      mk('b-sw','swim',I,'Technique Swim',       'Z1–Z2',     '45m',   40, "Focus on catch and pull mechanics. Use paddles for half the session. Quality over quantity.", "Video yourself underwater if you can — eye-opening."),
-      mk('b-mr','run', I,'Mid-Week Easy Run',   'Z2',        '50m',   40, "Comfortable conversational pace. 30 min is fine if that's all you have."),
-      mk('b-bi','bike',I,'Aerobic Bike Intervals','Z2–Z3',   '1h',    50, "2 × 15 min at top of Z2 into Z3. Builds sustainable power base."),
-      mk('b-os','swim',O,'Easy Swim',            'Z1',        '30m',   25, "Just get in the water. Drills or easy laps."),
+      mk('b-lr','run', K,'Long Easy Run',         'Z2',     '1h 30m', 80, "Build your aerobic engine. Keep HR below 145 the entire time. Walk uphills if needed.", "Time on feet is the goal — pace is irrelevant."),
+      mk('b-lb','bike',K,'Long Endurance Ride',   'Z2',     '2h 30m',120, "Steady riding at 55–75% FTP. Cadence 85–95rpm. Practice nutrition every 30–45 min.", "Great time to work out your race nutrition strategy."),
+      mk('b-sw','swim',I,'Technique Swim',         'Z1–Z2',  '45m',   40,  "Focus on catch and pull. Use paddles for half the session. Quality over quantity.", "Video yourself underwater if you can — eye-opening."),
+      mk('b-mr','run', I,'Mid-Week Easy Run',     'Z2',     '50m',   40,  "Comfortable conversational pace. 30 min is fine if that's all you have."),
+      mk('b-bi','bike',I,'Aerobic Bike Intervals','Z2–Z3',  '1h',    50,  "2 × 15 min at top of Z2 into Z3. Builds sustainable power base."),
+      mk('b-os','swim',O,'Easy Swim',              'Z1',     '30m',   25,  "Just get in the water. Drills or easy laps."),
     ];
     case 1: return [
-      mk('m-lr','run', K,'Long Run',            'Z2',        '1h 45m', 90, "Your most important session. Build towards 30–32 km over this phase. Conversational pace throughout.", "Fuel every 45 min. Protein within 30 min of finishing."),
-      mk('m-te','run', K,'Tempo Run',           'Z3–Z4',     '50m',   40, "15 min warm-up. 20–25 min at marathon goal pace. 10 min cool-down.", "Should feel hard but sustainable. If HR spikes above Z4, ease off."),
-      mk('m-ml','run', I,'Medium Long Run',     'Z2',        '1h 15m', 70, "Bridging session. Easy effort, building weekly volume."),
-      mk('m-rb','bike',I,'Recovery Ride',        'Z1–Z2',     '1h',    55, "Active recovery on the bike. Genuinely easy — this helps your running legs, not hurts them."),
-      mk('m-sw','swim',I,'Swim Maintenance',    'Z1–Z2',     '40m',   35, "Keep the swim habit going. Easy aerobic work only."),
-      mk('m-or','run', O,'Optional Easy Run',   'Z1',        '30m',   25, "Only if your legs genuinely feel good."),
+      mk('m-lr','run', K,'Long Run',            'Z2',    '1h 45m', 90, "Your most important session. Build towards 30–32 km. Conversational pace throughout.", "Fuel every 45 min. Protein within 30 min of finishing."),
+      mk('m-te','run', K,'Tempo Run',           'Z3–Z4', '50m',    40, "15 min warm-up. 20–25 min at marathon goal pace. 10 min cool-down.", "Should feel hard but sustainable. If HR spikes above Z4, ease off."),
+      mk('m-ml','run', I,'Medium Long Run',     'Z2',    '1h 15m', 70, "Bridging session. Easy effort, building weekly volume."),
+      mk('m-rb','bike',I,'Recovery Ride',        'Z1–Z2', '1h',     55, "Active recovery on the bike. Genuinely easy — helps your running legs."),
+      mk('m-sw','swim',I,'Swim Maintenance',    'Z1–Z2', '40m',    35, "Keep the swim habit going. Easy aerobic work only."),
+      mk('m-or','run', O,'Optional Easy Run',   'Z1',    '30m',    25, "Only if your legs genuinely feel good."),
     ];
     case 2: return [
-      mk('pt-er','run', K,'Easy Shakeout Run',  'Z1–Z2',     '35m',   30, "Feel the legs out. Nothing heroic. Keep it comfortable.", "Race week: lay out your kit. Nothing new on race day."),
-      mk('pt-te','run', K,'Short Tempo',        'Z3',        '30m',   25, "10 min warm-up, 10 min at marathon pace, 10 min easy. Just staying tuned.", "This is to feel sharp, not to create fatigue."),
-      mk('pt-sp','bike',O,'Easy Spin',           'Z1',        '40m',   35, "Flush the legs pre-race. No efforts at all."),
+      mk('pt-er','run', K,'Easy Shakeout Run', 'Z1–Z2', '35m', 30, "Feel the legs out. Nothing heroic.", "Race week: lay out your kit. Nothing new on race day."),
+      mk('pt-te','run', K,'Short Tempo',       'Z3',    '30m', 25, "10 min warm-up, 10 min at marathon pace, 10 min easy. Just staying tuned.", "This is to feel sharp, not to create fatigue."),
+      mk('pt-sp','bike',O,'Easy Spin',          'Z1',    '40m', 35, "Flush the legs pre-race. No efforts at all."),
     ];
     case 3: return [
-      mk('rb-lr','bike',K,"Long Ride",           'Z2',        '3h',   160, "Build towards L'Étape. Include some climbing if possible. Aerobic base.", "Fuel 60–80g carbs/hour. Test your race-day nutrition here."),
-      mk('rb-in','bike',K,'Bike Intervals',      'Z3–Z4',     '1h 15m', 70, "3 × 10 min at Z3–Z4 power, 5 min easy between. Builds power for a long mountain stage."),
-      mk('rb-ru','run', I,'Easy Run',            'Z2',        '45m',   40, "Maintain your run base. Conversational effort."),
-      mk('rb-sw','swim',I,'Swim',                'Z1–Z2',     '45m',   40, "Keep the swim habit going for Half IM later."),
+      mk('rb-lr','bike',K,"Long Ride",           'Z2',    '3h',     160, "Build towards L'Étape. Include some climbing if possible.", "Fuel 60–80g carbs/hour. Test your race-day nutrition here."),
+      mk('rb-in','bike',K,'Bike Intervals',      'Z3–Z4', '1h 15m', 70,  "3 × 10 min at Z3–Z4 power, 5 min easy between. Builds power for a long mountain stage."),
+      mk('rb-ru','run', I,'Easy Run',            'Z2',    '45m',    40,  "Maintain your run base. Conversational effort."),
+      mk('rb-sw','swim',I,'Swim',                'Z1–Z2', '45m',    40,  "Keep the swim habit going for Half IM later."),
     ];
     case 4: return [
-      mk('et-ri','bike',K,'Easy Spin + Surges',  'Z1–Z2',     '45m',   40, "30 min easy, then 4 × 30 sec surges to feel sharp.", "Legs should feel springy — if not, extra rest is smarter."),
-      mk('et-ac','bike',I,'Activation Ride',      'Z2',        '25m',   20, "Day before: 20 min easy, 3 × 1 min at race pace, 4 min easy. Done."),
+      mk('et-ri','bike',K,'Easy Spin + Surges',  'Z1–Z2', '45m', 40, "30 min easy, then 4 × 30 sec surges to feel sharp.", "Legs should feel springy — if not, extra rest is smarter."),
+      mk('et-ac','bike',I,'Activation Ride',      'Z2',    '25m', 20, "Day before: 20 min easy, 3 × 1 min at race pace, 4 min easy. Done."),
     ];
     case 5: return [
-      mk('h-br','bike',K,'Brick Session',        'Z2–Z3',     '2h + 20m run', 100, "60–90 min at Z2 on the bike, last 20 min push to Z3. Straight into 15–20 min Z2 run.", "The first 5 min of the run will feel horrible — that is completely normal."),
-      mk('h-lr','run', K,'Long Run',             'Z2',        '1h 30m',  85, "Building towards the HIM run leg. Keep HR in Z2 despite accumulated fatigue."),
-      mk('h-lb','bike',K,'Long Ride',            'Z2',        '2h 30m–3h',140,"Steady bike base for the 90 km HIM leg. Nutrition practice every session."),
-      mk('h-sw','swim',K,'Longer Swim',          'Z2',        '1h',      55, "Build to 2000–2500m. Steady pace sets. Practice sighting and bilateral breathing.", "If you can get to open water, prioritise it."),
-      mk('h-ru','run', I,'Easy Run',             'Z2',        '45m',     40, "Mid-week run to maintain volume."),
-      mk('h-os','swim',O,'Short Swim',           'Z1',        '35m',     30, "Technique focus or easy aerobic."),
+      mk('h-br','bike',K,'Brick Session',   'Z2–Z3',     '2h + 20m run', 100, "60–90 min at Z2 bike, last 20 min push to Z3. Straight into 15–20 min Z2 run.", "The first 5 min of the run will feel horrible — that is completely normal."),
+      mk('h-lr','run', K,'Long Run',        'Z2',         '1h 30m',       85,  "Building towards the HIM run leg. Keep HR in Z2 despite accumulated fatigue."),
+      mk('h-lb','bike',K,'Long Ride',       'Z2',         '2h 30m–3h',   140,  "Steady bike base for the 90 km HIM leg. Nutrition practice every session."),
+      mk('h-sw','swim',K,'Longer Swim',     'Z2',         '1h',           55,  "Build to 2000–2500m. Steady pace sets. Practice sighting and bilateral breathing.", "If you can get to open water, prioritise it."),
+      mk('h-ru','run', I,'Easy Run',        'Z2',         '45m',          40,  "Mid-week run to maintain volume."),
+      mk('h-os','swim',O,'Short Swim',      'Z1',         '35m',          30,  "Technique focus or easy aerobic."),
     ];
     case 6: return [
-      mk('ht-sw','swim',K,'Race Pace Swim',      'Z3',        '40m',   35, "Warm up, then 3 × 300m at target HIM swim pace. Cool down."),
-      mk('ht-bi','bike',K,'Easy Ride + Efforts', 'Z1–Z2',     '45m',   40, "Easy ride with 3 × 3 min at Z3 to stay sharp."),
-      mk('ht-ru','run', I,'Easy Run',            'Z1–Z2',     '30m',   25, "Comfortable and easy. The hay is in the barn."),
+      mk('ht-sw','swim',K,'Race Pace Swim',      'Z3',    '40m', 35, "Warm up, then 3 × 300m at target HIM swim pace. Cool down."),
+      mk('ht-bi','bike',K,'Easy Ride + Efforts', 'Z1–Z2', '45m', 40, "Easy ride with 3 × 3 min at Z3 to stay sharp."),
+      mk('ht-ru','run', I,'Easy Run',            'Z1–Z2', '30m', 25, "Comfortable and easy. The hay is in the barn."),
     ];
     case 7: return [
-      mk('im-lb','bike',K,'Long Ride',           'Z2',        '4h+',   220, "Your cornerstone Ironman session. Ride at race pace. Nutrition is training — 80–90g carbs/hour.", "Tired after? Good. That is what race day feels like."),
-      mk('im-lr','run', K,'Long Run',            'Z2',        '2h',    110, "Easy long run. These slow miles build the durability to survive the Ironman run."),
-      mk('im-br','bike',K,'Brick',               'Z2',        '2h + 30m run', 120,"Race-simulation brick. Bike at race watts, run at race pace. Practice transitions."),
-      mk('im-sw','swim',K,'Long Swim',           'Z2',        '1h 15m', 70, "Build to 3500–4000m. Race-pace sets: 5 × 400m with short rest."),
-      mk('im-mr','run', I,'Mid-Week Run',        'Z2',        '1h',     55, "Steady aerobic run."),
-      mk('im-os','swim',O,'Recovery Swim',       'Z1',        '40m',    35, "Easy laps or technique work."),
+      mk('im-lb','bike',K,'Long Ride',      'Z2', '4h+',             220, "Cornerstone Ironman session. Ride at race pace. Nutrition is training — 80–90g carbs/hour.", "Tired after? Good. That is what race day feels like."),
+      mk('im-lr','run', K,'Long Run',       'Z2', '2h',              110, "Easy long run. These slow miles build the durability to survive the Ironman run."),
+      mk('im-br','bike',K,'Brick',          'Z2', '2h + 30m run',   120, "Race-simulation brick. Bike at race watts, run at race pace. Practice transitions."),
+      mk('im-sw','swim',K,'Long Swim',      'Z2', '1h 15m',          70, "Build to 3500–4000m. Race-pace sets: 5 × 400m with short rest."),
+      mk('im-mr','run', I,'Mid-Week Run',   'Z2', '1h',              55, "Steady aerobic run."),
+      mk('im-os','swim',O,'Recovery Swim',  'Z1', '40m',             35, "Easy laps or technique work."),
     ];
     case 8: return [
-      mk('it-sw','swim',K,'Swim Race Prep',      'Z2–Z3',     '40m',   35, "Easy swim with some race-pace efforts. Stay loose."),
-      mk('it-bi','bike',K,'Easy Ride + Pickups', 'Z1–Z2',     '45m',   40, "Comfortable spin with 4 × 1 min at Z3. Just waking the legs up."),
-      mk('it-ru','run', I,'Short Jog',           'Z1',        '25m',   20, "10 min out, 10 min back. Minimal. You are ready."),
+      mk('it-sw','swim',K,'Swim Race Prep',      'Z2–Z3', '40m', 35, "Easy swim with some race-pace efforts. Stay loose."),
+      mk('it-bi','bike',K,'Easy Ride + Pickups', 'Z1–Z2', '45m', 40, "Comfortable spin with 4 × 1 min at Z3. Just waking the legs up."),
+      mk('it-ru','run', I,'Short Jog',           'Z1',    '25m', 20, "10 min out, 10 min back. Minimal. You are ready."),
     ];
     default: return [];
   }
@@ -416,7 +436,8 @@ function getSessions(phaseIdx) {
 // ══════════════════════════════════════════════════════════════
 //  STATE
 // ══════════════════════════════════════════════════════════════
-let activities = [], currentUser = null, weeklyChart = null, donutChart = null, chartWeeks = 12;
+let activities=[], currentUser=null, weeklyChart=null, donutChart=null, chartWeeks=12;
+let stravaConnected = false;
 
 // ══════════════════════════════════════════════════════════════
 //  AUTH
@@ -426,12 +447,12 @@ async function sendMagicLink() {
   const msg   = document.getElementById('auth-msg');
   if (!email) { msg.style.color='var(--key)'; msg.textContent='Please enter your email address.'; return; }
   msg.style.color='var(--muted)'; msg.textContent='Sending…';
-  const { error } = await sb.auth.signInWithOtp({ email, options:{ emailRedirectTo: location.href } });
+  const { error } = await sb.auth.signInWithOtp({ email, options:{ emailRedirectTo: location.href.split('?')[0] } });
   if (error) { msg.style.color='var(--key)'; msg.textContent=error.message; return; }
   msg.style.color='var(--green)'; msg.textContent='✓ Magic link sent! Check your inbox (and spam folder).';
 }
 async function logout() { await sb.auth.signOut(); }
-function showApp()         { document.getElementById('auth-overlay').style.display='none';  document.getElementById('app').style.display='block'; }
+function showApp()         { document.getElementById('auth-overlay').style.display='none'; document.getElementById('app').style.display='block'; }
 function showAuthOverlay() { document.getElementById('app').style.display='none'; document.getElementById('auth-overlay').style.display='flex'; }
 
 // ══════════════════════════════════════════════════════════════
@@ -439,7 +460,7 @@ function showAuthOverlay() { document.getElementById('app').style.display='none'
 // ══════════════════════════════════════════════════════════════
 function setSyncBadge(state, label) {
   const b = document.getElementById('sync-badge');
-  b.className = 'sync-badge' + (state==='ok' ? ' ok' : state==='err' ? ' err' : '');
+  b.className = 'sync-badge' + (state==='ok'?' ok':state==='err'?' err':'');
   b.textContent = label;
 }
 
@@ -484,10 +505,171 @@ async function clearData() {
   setSyncBadge('','⟳ Deleting…');
   const { error } = await sb.from('activities').delete().eq('user_id', currentUser.id);
   if (error) { setSyncBadge('err','✗ Delete failed'); return; }
-  activities = [];
+  activities=[];
   setSyncBadge('ok','✓ 0 activities');
-  calibrateZonesFromData();
-  refreshAll();
+  calibrateZonesFromData(); refreshAll();
+}
+
+// ══════════════════════════════════════════════════════════════
+//  STRAVA OAUTH + SYNC
+// ══════════════════════════════════════════════════════════════
+function connectStrava() {
+  const redirectUri = encodeURIComponent(location.href.split('?')[0]);
+  const url = `https://www.strava.com/oauth/authorize?client_id=${STRAVA_CLIENT_ID}&redirect_uri=${redirectUri}&response_type=code&scope=activity:read_all&approval_prompt=auto`;
+  window.location.href = url;
+}
+
+async function handleStravaCallback() {
+  const params = new URLSearchParams(window.location.search);
+  const code   = params.get('code');
+  const error  = params.get('error');
+  if (error) {
+    setStravaLog('✗ Strava connection was cancelled.', 'var(--key)');
+    cleanUrl(); return;
+  }
+  if (!code) return;
+
+  // Exchange code for tokens via Edge Function
+  setStravaLog('⟳ Connecting to Strava…', 'var(--muted)');
+  cleanUrl();
+  try {
+    const res  = await fetch(`${SUPABASE_URL}/functions/v1/strava-auth`, {
+      method: 'POST',
+      headers: { 'Content-Type':'application/json', 'Authorization':`Bearer ${SUPABASE_ANON_KEY}` },
+      body: JSON.stringify({ action:'exchange', code }),
+    });
+    const data = await res.json();
+    if (data.errors || !data.access_token) {
+      setStravaLog('✗ Token exchange failed: ' + (data.message || JSON.stringify(data)), 'var(--key)'); return;
+    }
+    // Save tokens to Supabase
+    await sb.from('strava_tokens').upsert({
+      user_id:       currentUser.id,
+      athlete_id:    data.athlete?.id,
+      access_token:  data.access_token,
+      refresh_token: data.refresh_token,
+      expires_at:    data.expires_at,
+    }, { onConflict:'user_id' });
+    setStravaLog('✓ Strava connected! Syncing activities…', 'var(--green)');
+    updateStravaUI(true);
+    await syncFromStrava();
+  } catch(e) {
+    setStravaLog('✗ Error: ' + e.message, 'var(--key)');
+  }
+}
+
+async function getValidStravaToken() {
+  const { data: row } = await sb.from('strava_tokens')
+    .select('*').eq('user_id', currentUser.id).single();
+  if (!row) return null;
+
+  // Refresh if token expires within 5 minutes
+  if (Date.now() / 1000 > row.expires_at - 300) {
+    const res  = await fetch(`${SUPABASE_URL}/functions/v1/strava-auth`, {
+      method: 'POST',
+      headers: { 'Content-Type':'application/json', 'Authorization':`Bearer ${SUPABASE_ANON_KEY}` },
+      body: JSON.stringify({ action:'refresh', refresh_token:row.refresh_token }),
+    });
+    const data = await res.json();
+    if (!data.access_token) return null;
+    await sb.from('strava_tokens').upsert({
+      user_id:currentUser.id, athlete_id:row.athlete_id,
+      access_token:data.access_token, refresh_token:data.refresh_token, expires_at:data.expires_at,
+    }, { onConflict:'user_id' });
+    return data.access_token;
+  }
+  return row.access_token;
+}
+
+function mapStravaSport(type) {
+  const t = (type||'').toLowerCase();
+  if (t.includes('run') || t.includes('trail') || t.includes('hike')) return 'run';
+  if (t.includes('ride') || t.includes('cycl') || t.includes('bike') || t.includes('virtual')) return 'bike';
+  if (t.includes('swim')) return 'swim';
+  return 'other';
+}
+
+async function syncFromStrava() {
+  setStravaLog('⟳ Fetching activities from Strava…', 'var(--muted)');
+  setSyncBadge('','⟳ Syncing Strava…');
+  const token = await getValidStravaToken();
+  if (!token) { setStravaLog('✗ Not connected to Strava. Please connect first.', 'var(--key)'); return; }
+
+  try {
+    // Fetch up to 500 activities (5 pages of 100)
+    let allActs = [];
+    for (let page = 1; page <= 5; page++) {
+      const res  = await fetch(
+        `https://www.strava.com/api/v3/athlete/activities?per_page=100&page=${page}`,
+        { headers:{ 'Authorization':`Bearer ${token}` } }
+      );
+      const batch = await res.json();
+      if (!Array.isArray(batch) || !batch.length) break;
+      allActs = allActs.concat(batch);
+      if (batch.length < 100) break;
+    }
+
+    const mapped = allActs.map(a => ({
+      date:    a.start_date.slice(0,10),
+      sport:   mapStravaSport(a.sport_type || a.type),
+      name:    a.name,
+      dist:    a.distance / 1000,       // metres → km
+      elapsed: a.elapsed_time,          // already seconds
+      avgHR:   a.average_heartrate || null,
+      elev:    a.total_elevation_gain || null,
+    }));
+
+    const ok = await saveActivities(mapped);
+    if (!ok) { setStravaLog('✗ Failed to save activities to database.', 'var(--key)'); return; }
+    setStravaLog(`✓ Synced ${mapped.length} activities from Strava.`, 'var(--green)');
+    await loadActivities();
+  } catch(e) {
+    setStravaLog('✗ Sync error: ' + e.message, 'var(--key)');
+    setSyncBadge('err','✗ Strava error');
+  }
+}
+
+async function disconnectStrava() {
+  if (!confirm('Disconnect Strava? Your existing activities will remain in the database.')) return;
+  await sb.from('strava_tokens').delete().eq('user_id', currentUser.id);
+  updateStravaUI(false);
+  setStravaLog('Strava disconnected.', 'var(--muted)');
+}
+
+async function checkStravaConnection() {
+  const { data } = await sb.from('strava_tokens')
+    .select('athlete_id').eq('user_id', currentUser.id).single();
+  const connected = !!data;
+  stravaConnected = connected;
+  updateStravaUI(connected);
+  return connected;
+}
+
+function updateStravaUI(connected) {
+  stravaConnected = connected;
+  const badge   = document.getElementById('strava-status-badge');
+  const actions = document.getElementById('strava-actions');
+  const hdrBtn  = document.getElementById('strava-header-btn');
+  if (connected) {
+    if (badge)   { badge.textContent='● Connected'; badge.className='strava-status connected'; }
+    if (actions) actions.innerHTML = `
+      <button class="btn-sm strava" onclick="syncFromStrava()">🔄 Sync now</button>
+      <button class="btn-sm outline" onclick="disconnectStrava()">Disconnect</button>`;
+    if (hdrBtn)  { hdrBtn.textContent='🔄 Sync Strava'; hdrBtn.onclick=syncFromStrava; }
+  } else {
+    if (badge)   { badge.textContent='Not connected'; badge.className='strava-status disconnected'; }
+    if (actions) actions.innerHTML = `<button class="btn-sm strava" onclick="connectStrava()">Connect Strava</button>`;
+    if (hdrBtn)  { hdrBtn.textContent='🟠 Connect Strava'; hdrBtn.onclick=connectStrava; }
+  }
+}
+
+function stravaHeaderClick() { stravaConnected ? syncFromStrava() : connectStrava(); }
+function setStravaLog(msg, color) {
+  const el = document.getElementById('strava-log');
+  if (el) { el.textContent=msg; el.style.color=color; }
+}
+function cleanUrl() {
+  window.history.replaceState({}, document.title, location.pathname);
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -496,52 +678,44 @@ async function clearData() {
 function normKey(k) { return k.toLowerCase().replace(/[\s_\-\/]+/g,''); }
 
 function parseSport(val) {
-  const v = (val||'').toLowerCase();
-  if (v.includes('run') || v.includes('trail')) return 'run';
-  if (v.includes('cycl') || v.includes('bike') || v.includes('ride') || v.includes('velo')) return 'bike';
-  if (v.includes('swim') || v.includes('pool') || v.includes('openwater')) return 'swim';
+  const v=(val||'').toLowerCase();
+  if (v.includes('run')||v.includes('trail')) return 'run';
+  if (v.includes('cycl')||v.includes('bike')||v.includes('ride')||v.includes('velo')) return 'bike';
+  if (v.includes('swim')||v.includes('pool')||v.includes('openwater')) return 'swim';
   return 'other';
 }
-
 function parseTime(val) {
   if (!val) return 0;
-  const parts = String(val).trim().split(':').map(Number);
-  if (parts.length === 3) return parts[0]*3600 + parts[1]*60 + parts[2];
-  if (parts.length === 2) return parts[0]*60 + parts[1];
-  return parseFloat(val) || 0;
+  const parts=String(val).trim().split(':').map(Number);
+  if (parts.length===3) return parts[0]*3600+parts[1]*60+parts[2];
+  if (parts.length===2) return parts[0]*60+parts[1];
+  return parseFloat(val)||0;
 }
-
 function parseDist(val, sport) {
-  const n = parseFloat(String(val).replace(',','.'));
+  const n=parseFloat(String(val).replace(',','.'));
   if (isNaN(n)) return 0;
-  if (sport === 'swim' && n > 20) return n / 1000; // Garmin exports pool swim in metres
+  if (sport==='swim' && n>20) return n/1000;
   return n;
 }
-
 function processCSV(text) {
-  const result = Papa.parse(text, { header:true, skipEmptyLines:true });
+  const result=Papa.parse(text,{header:true,skipEmptyLines:true});
   if (!result.data.length) return [];
-  const keyMap = {};
-  for (const k of Object.keys(result.data[0])) keyMap[normKey(k)] = k;
-  const get = (row, ...tries) => {
-    for (const t of tries) { const v = row[keyMap[normKey(t)]]; if (v !== undefined && v !== '') return v; }
-    return '';
-  };
-  const parsed = [];
+  const keyMap={};
+  for (const k of Object.keys(result.data[0])) keyMap[normKey(k)]=k;
+  const get=(row,...tries)=>{ for(const t of tries){const v=row[keyMap[normKey(t)]];if(v!==undefined&&v!=='')return v;} return ''; };
+  const parsed=[];
   for (const row of result.data) {
-    const rawSport = get(row,'Activity Type','ActivityType','Type','Sport');
-    const sport    = parseSport(rawSport);
-    const rawDist  = get(row,'Distance','Dist','TotalDistance');
-    const dist     = parseDist(rawDist, sport);
-    const rawTime  = get(row,'Time','Elapsed Time','ElapsedTime','Moving Time','MovingTime','Duration');
-    const elapsed  = parseTime(rawTime);
-    const rawDate  = get(row,'Date','Activity Date','ActivityDate','StartTime','Start Time');
-    const date     = rawDate ? rawDate.slice(0,10) : '';
-    if (!date || elapsed < 300) continue;
-    const avgHR = parseFloat(get(row,'Avg HR','AvgHR','AverageHR','Average Heart Rate')) || null;
-    const elev  = parseFloat(get(row,'Elev Gain','ElevGain','Total Ascent','ElevationGain')) || null;
-    const name  = get(row,'Activity Name','Name','Title') || rawSport;
-    parsed.push({ date, sport, name, dist, elapsed, avgHR, elev });
+    const rawSport=get(row,'Activity Type','ActivityType','Type','Sport');
+    const sport=parseSport(rawSport);
+    const dist=parseDist(get(row,'Distance','Dist','TotalDistance'),sport);
+    const elapsed=parseTime(get(row,'Time','Elapsed Time','ElapsedTime','Moving Time','MovingTime','Duration'));
+    const rawDate=get(row,'Date','Activity Date','ActivityDate','StartTime','Start Time');
+    const date=rawDate?rawDate.slice(0,10):'';
+    if (!date||elapsed<300) continue;
+    const avgHR=parseFloat(get(row,'Avg HR','AvgHR','AverageHR','Average Heart Rate'))||null;
+    const elev=parseFloat(get(row,'Elev Gain','ElevGain','Total Ascent','ElevationGain'))||null;
+    const name=get(row,'Activity Name','Name','Title')||rawSport;
+    parsed.push({date,sport,name,dist,elapsed,avgHR,elev});
   }
   return parsed;
 }
@@ -549,62 +723,45 @@ function processCSV(text) {
 // ══════════════════════════════════════════════════════════════
 //  ZONE CALIBRATION
 // ══════════════════════════════════════════════════════════════
-const SEED_RUNS = [{ x:138, y:330 }]; // 5:30/km @ 138 bpm (user confirmed)
-
+const SEED_RUNS=[{x:138,y:330}];
 function fitLinear(pts) {
-  if (pts.length < 2) return null;
-  const n  = pts.length;
-  const mx = pts.reduce((s,p)=>s+p.x,0)/n;
-  const my = pts.reduce((s,p)=>s+p.y,0)/n;
-  const num = pts.reduce((s,p)=>s+(p.x-mx)*(p.y-my),0);
-  const den = pts.reduce((s,p)=>s+(p.x-mx)**2,0);
+  if (pts.length<2) return null;
+  const n=pts.length, mx=pts.reduce((s,p)=>s+p.x,0)/n, my=pts.reduce((s,p)=>s+p.y,0)/n;
+  const num=pts.reduce((s,p)=>s+(p.x-mx)*(p.y-my),0), den=pts.reduce((s,p)=>s+(p.x-mx)**2,0);
   if (Math.abs(den)<1e-9) return null;
-  const m = num/den;
-  if (m >= 0) return null; // invalid: faster HR must mean faster pace
-  return { m, b: my - m*mx };
+  const m=num/den; if(m>=0) return null;
+  return {m,b:my-m*mx};
 }
-
-function fmtPace(secs) {
-  const m=Math.floor(secs/60), s=Math.round(secs%60);
-  return `${m}:${String(s).padStart(2,'0')}`;
-}
+function fmtPace(secs) { const m=Math.floor(secs/60),s=Math.round(secs%60); return `${m}:${String(s).padStart(2,'0')}`; }
 
 function calibrateZonesFromData() {
-  // Run
-  const runActs = activities.filter(a=>a.sport==='run' && a.avgHR && a.dist>1 && a.elapsed>600);
-  const runPts  = [...SEED_RUNS];
-  for (const a of runActs) {
-    const pace = a.elapsed / a.dist;
-    if (pace > 200 && pace < 700) runPts.push({ x:a.avgHR, y:pace });
-  }
-  const fit = fitLinear(runPts);
-  if (fit) {
-    const p = hr => fit.m*hr + fit.b;
-    RUN_ZONES = [
-      { z:'Z1', label:'Recovery',  lo:p(HR_ZONES[1].lo), hi:9999,              display:`> ${fmtPace(p(HR_ZONES[1].lo))} /km` },
-      { z:'Z2', label:'Aerobic',   lo:p(AeT),            hi:p(HR_ZONES[1].lo), display:`${fmtPace(p(AeT))}–${fmtPace(p(HR_ZONES[1].lo))} /km` },
-      { z:'Z3', label:'Tempo',     lo:p(midThresh),      hi:p(AeT),            display:`${fmtPace(p(midThresh))}–${fmtPace(p(AeT))} /km` },
-      { z:'Z4', label:'Threshold', lo:p(AnT),            hi:p(midThresh),      display:`${fmtPace(p(AnT))}–${fmtPace(p(midThresh))} /km` },
-      { z:'Z5', label:'VO2max',    lo:0,                 hi:p(AnT),            display:`< ${fmtPace(p(AnT))} /km` },
+  const runActs=activities.filter(a=>a.sport==='run'&&a.avgHR&&a.dist>1&&a.elapsed>600);
+  const runPts=[...SEED_RUNS];
+  for(const a of runActs){const pace=a.elapsed/a.dist;if(pace>200&&pace<700)runPts.push({x:a.avgHR,y:pace});}
+  const fit=fitLinear(runPts);
+  if(fit){
+    const p=hr=>fit.m*hr+fit.b;
+    RUN_ZONES=[
+      {z:'Z1',label:'Recovery', lo:p(HR_ZONES[1].lo),hi:9999,              display:`> ${fmtPace(p(HR_ZONES[1].lo))} /km`},
+      {z:'Z2',label:'Aerobic',  lo:p(AeT),           hi:p(HR_ZONES[1].lo), display:`${fmtPace(p(AeT))}–${fmtPace(p(HR_ZONES[1].lo))} /km`},
+      {z:'Z3',label:'Tempo',    lo:p(midThresh),      hi:p(AeT),            display:`${fmtPace(p(midThresh))}–${fmtPace(p(AeT))} /km`},
+      {z:'Z4',label:'Threshold',lo:p(AnT),            hi:p(midThresh),      display:`${fmtPace(p(AnT))}–${fmtPace(p(midThresh))} /km`},
+      {z:'Z5',label:'VO2max',   lo:0,                 hi:p(AnT),            display:`< ${fmtPace(p(AnT))} /km`},
     ];
-    calibMeta.run = runActs.length>=5 ? `auto-calibrated (${runActs.length} runs)` : `seeded + ${runActs.length} run(s)`;
+    calibMeta.run=runActs.length>=5?`auto-calibrated (${runActs.length} runs)`:`seeded + ${runActs.length} run(s)`;
   }
-
-  // Swim
-  const swimActs = activities.filter(a=>a.sport==='swim' && a.dist>0.3 && a.elapsed>300);
-  if (swimActs.length >= 4) {
-    const paces = swimActs.map(a=>(a.elapsed/(a.dist*10))).sort((a,b)=>a-b);
-    const p25   = paces[Math.floor(paces.length*.25)];
-    const p75   = paces[Math.floor(paces.length*.75)];
-    const rng   = p75 - p25;
-    SWIM_ZONES = [
-      { z:'Z1', label:'Recovery',  lo:p75+rng,     hi:9999,       display:`> ${fmtPace(p75+rng)} /100m` },
-      { z:'Z2', label:'Aerobic',   lo:p75,         hi:p75+rng,    display:`${fmtPace(p75)}–${fmtPace(p75+rng)} /100m` },
-      { z:'Z3', label:'Tempo',     lo:p25+rng*.3,  hi:p75,        display:`${fmtPace(p25+rng*.3)}–${fmtPace(p75)} /100m` },
-      { z:'Z4', label:'Threshold', lo:p25-rng*.2,  hi:p25+rng*.3, display:`${fmtPace(p25-rng*.2)}–${fmtPace(p25+rng*.3)} /100m` },
-      { z:'Z5', label:'Sprint',    lo:0,           hi:p25-rng*.2, display:`< ${fmtPace(p25-rng*.2)} /100m` },
+  const swimActs=activities.filter(a=>a.sport==='swim'&&a.dist>0.3&&a.elapsed>300);
+  if(swimActs.length>=4){
+    const paces=swimActs.map(a=>(a.elapsed/(a.dist*10))).sort((a,b)=>a-b);
+    const p25=paces[Math.floor(paces.length*.25)], p75=paces[Math.floor(paces.length*.75)], rng=p75-p25;
+    SWIM_ZONES=[
+      {z:'Z1',label:'Recovery', lo:p75+rng,    hi:9999,       display:`> ${fmtPace(p75+rng)} /100m`},
+      {z:'Z2',label:'Aerobic',  lo:p75,         hi:p75+rng,    display:`${fmtPace(p75)}–${fmtPace(p75+rng)} /100m`},
+      {z:'Z3',label:'Tempo',    lo:p25+rng*.3,  hi:p75,        display:`${fmtPace(p25+rng*.3)}–${fmtPace(p75)} /100m`},
+      {z:'Z4',label:'Threshold',lo:p25-rng*.2,  hi:p25+rng*.3, display:`${fmtPace(p25-rng*.2)}–${fmtPace(p25+rng*.3)} /100m`},
+      {z:'Z5',label:'Sprint',   lo:0,           hi:p25-rng*.2, display:`< ${fmtPace(p25-rng*.2)} /100m`},
     ];
-    calibMeta.swim = `auto-calibrated (${swimActs.length} swims)`;
+    calibMeta.swim=`auto-calibrated (${swimActs.length} swims)`;
   }
 }
 
@@ -612,15 +769,15 @@ function calibrateZonesFromData() {
 //  COUNTDOWNS
 // ══════════════════════════════════════════════════════════════
 function updateCountdowns() {
-  const today = new Date(); today.setHours(0,0,0,0);
-  document.getElementById('race-cards').innerHTML = RACES.map(r => {
-    const d    = new Date(r.date); d.setHours(0,0,0,0);
-    const days = Math.round((d - today) / 86400000);
-    const cls  = days < 0 ? '' : days <= 14 ? 'urgent' : days <= 60 ? 'soon' : '';
-    const lbl  = days < 0 ? 'days ago' : days === 0 ? 'TODAY!' : 'days to go';
+  const today=new Date(); today.setHours(0,0,0,0);
+  document.getElementById('race-cards').innerHTML=RACES.map(r=>{
+    const d=new Date(r.date); d.setHours(0,0,0,0);
+    const days=Math.round((d-today)/86400000);
+    const cls=days<0?'':days<=14?'urgent':days<=60?'soon':'';
+    const lbl=days<0?'days ago':days===0?'TODAY!':'days to go';
     return `<div class="race-card ${cls}${r.tentative?' tentative':''}">
       <div class="icon">${r.icon}</div>
-      <div class="rname">${r.name}${r.tentative?' ⚠':''}  </div>
+      <div class="rname">${r.name}${r.tentative?' ⚠':''}</div>
       <div class="days">${Math.abs(days)}</div>
       <div class="rlabel">${lbl}</div>
       <div class="rlabel" style="font-size:.65rem;margin-top:2px">${r.date}</div>
@@ -632,108 +789,86 @@ function updateCountdowns() {
 //  STAT CARDS
 // ══════════════════════════════════════════════════════════════
 function fmtHrs(secs) {
-  const h = Math.floor(secs/3600), m = Math.round((secs%3600)/60);
-  if (h===0) return `${m}m`;
-  return m ? `${h}h ${m}m` : `${h}h`;
+  const h=Math.floor(secs/3600),m=Math.round((secs%3600)/60);
+  return h===0?`${m}m`:m?`${h}h ${m}m`:`${h}h`;
 }
-
 function updateStats() {
-  const now    = new Date(); now.setHours(23,59,59,999);
-  const cutoff = new Date(now); cutoff.setDate(now.getDate()-7);
-  const recent = activities.filter(a=>{ const d=new Date(a.date); return d>=cutoff && d<=now; });
-  const totSecs = recent.reduce((s,a)=>s+a.elapsed,0);
-  const totDist = recent.reduce((s,a)=>s+a.dist,0);
-  const hrs = sp => recent.filter(a=>a.sport===sp).reduce((t,a)=>t+a.elapsed,0);
-  const km  = sp => recent.filter(a=>a.sport===sp).reduce((t,a)=>t+a.dist,0);
-  const set = (id,v) => { const el=document.getElementById(id); if(el) el.textContent=v; };
-  set('s-wk-hrs',  fmtHrs(totSecs) || '—');
-  set('s-wk-dist', totDist ? `${totDist.toFixed(1)} km total` : '');
-  set('s-wk-act',  recent.length || '—');
-  set('s-run-hrs',  hrs('run')  ? fmtHrs(hrs('run'))  : '—');
-  set('s-run-km',   km('run')   ? `${km('run').toFixed(1)} km`  : '');
-  set('s-bike-hrs', hrs('bike') ? fmtHrs(hrs('bike')) : '—');
-  set('s-bike-km',  km('bike')  ? `${km('bike').toFixed(1)} km` : '');
-  set('s-swim-hrs', hrs('swim') ? fmtHrs(hrs('swim')) : '—');
-  set('s-swim-km',  km('swim')  ? `${km('swim').toFixed(1)} km` : '');
+  const now=new Date(); now.setHours(23,59,59,999);
+  const cut=new Date(now); cut.setDate(now.getDate()-7);
+  const recent=activities.filter(a=>{const d=new Date(a.date);return d>=cut&&d<=now;});
+  const totSecs=recent.reduce((s,a)=>s+a.elapsed,0);
+  const totDist=recent.reduce((s,a)=>s+a.dist,0);
+  const hrs=sp=>recent.filter(a=>a.sport===sp).reduce((t,a)=>t+a.elapsed,0);
+  const km =sp=>recent.filter(a=>a.sport===sp).reduce((t,a)=>t+a.dist,0);
+  const set=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v;};
+  set('s-wk-hrs', fmtHrs(totSecs)||'—');
+  set('s-wk-dist',totDist?`${totDist.toFixed(1)} km total`:'');
+  set('s-wk-act', recent.length||'—');
+  set('s-run-hrs', hrs('run') ?fmtHrs(hrs('run')) :'—'); set('s-run-km',  km('run') ?`${km('run').toFixed(1)} km` :'');
+  set('s-bike-hrs',hrs('bike')?fmtHrs(hrs('bike')):'—'); set('s-bike-km', km('bike')?`${km('bike').toFixed(1)} km`:'');
+  set('s-swim-hrs',hrs('swim')?fmtHrs(hrs('swim')):'—'); set('s-swim-km', km('swim')?`${km('swim').toFixed(1)} km`:'');
 }
 
 // ══════════════════════════════════════════════════════════════
 //  CHARTS
 // ══════════════════════════════════════════════════════════════
 function getMonday(d) {
-  const dt = new Date(d), day = dt.getDay();
-  dt.setDate(dt.getDate() - (day===0?6:day-1)); dt.setHours(0,0,0,0); return dt;
+  const dt=new Date(d),day=dt.getDay();
+  dt.setDate(dt.getDate()-(day===0?6:day-1)); dt.setHours(0,0,0,0); return dt;
 }
-
 function buildWeeklyData(weeks) {
   const labels=[],run=[],bike=[],swim=[],other=[];
-  const base = getMonday(new Date());
-  for (let w=weeks-1; w>=0; w--) {
+  const base=getMonday(new Date());
+  for(let w=weeks-1;w>=0;w--){
     const ws=new Date(base); ws.setDate(base.getDate()-w*7);
     const we=new Date(ws); we.setDate(ws.getDate()+7);
-    const mm=String(ws.getMonth()+1).padStart(2,'0'), dd=String(ws.getDate()).padStart(2,'0');
+    const mm=String(ws.getMonth()+1).padStart(2,'0'),dd=String(ws.getDate()).padStart(2,'0');
     labels.push(`${mm}/${dd}`);
-    const wk = activities.filter(a=>{ const d=new Date(a.date); return d>=ws && d<we; });
-    const hrs = sp => wk.filter(a=>a.sport===sp).reduce((t,a)=>t+a.elapsed/3600,0);
+    const wk=activities.filter(a=>{const d=new Date(a.date);return d>=ws&&d<we;});
+    const hrs=sp=>wk.filter(a=>a.sport===sp).reduce((t,a)=>t+a.elapsed/3600,0);
     run.push(+hrs('run').toFixed(2)); bike.push(+hrs('bike').toFixed(2));
     swim.push(+hrs('swim').toFixed(2)); other.push(+hrs('other').toFixed(2));
   }
-  return { labels, run, bike, swim, other };
+  return{labels,run,bike,swim,other};
 }
-
 function setChartRange(n) {
-  chartWeeks = n;
-  ['8','12','24'].forEach(x => {
-    const b=document.getElementById(`r${x}`); if(b) b.classList.toggle('active',x===String(n));
-  });
+  chartWeeks=n;
+  ['8','12','24'].forEach(x=>{const b=document.getElementById(`r${x}`);if(b)b.classList.toggle('active',x===String(n));});
   buildWeeklyChart();
 }
-
 function buildWeeklyChart() {
-  const ctx = document.getElementById('weekly-chart'); if(!ctx) return;
-  const d = buildWeeklyData(chartWeeks);
-  if (weeklyChart) weeklyChart.destroy();
-  weeklyChart = new Chart(ctx, {
+  const ctx=document.getElementById('weekly-chart'); if(!ctx) return;
+  const d=buildWeeklyData(chartWeeks);
+  if(weeklyChart) weeklyChart.destroy();
+  weeklyChart=new Chart(ctx,{
     type:'bar',
-    data:{ labels:d.labels, datasets:[
-      { label:'Run',   data:d.run,   backgroundColor:'rgba(249,115,22,.75)',  stack:'s' },
-      { label:'Bike',  data:d.bike,  backgroundColor:'rgba(6,182,212,.75)',   stack:'s' },
-      { label:'Swim',  data:d.swim,  backgroundColor:'rgba(129,140,248,.75)', stack:'s' },
-      { label:'Other', data:d.other, backgroundColor:'rgba(107,114,128,.75)', stack:'s' },
+    data:{labels:d.labels,datasets:[
+      {label:'Run',  data:d.run,  backgroundColor:'rgba(249,115,22,.75)',stack:'s'},
+      {label:'Bike', data:d.bike, backgroundColor:'rgba(6,182,212,.75)', stack:'s'},
+      {label:'Swim', data:d.swim, backgroundColor:'rgba(129,140,248,.75)',stack:'s'},
+      {label:'Other',data:d.other,backgroundColor:'rgba(107,114,128,.75)',stack:'s'},
     ]},
-    options:{
-      responsive:true, maintainAspectRatio:false,
-      plugins:{ legend:{ labels:{ color:'#8892a4', boxWidth:12, font:{size:11} } } },
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{labels:{color:'#8892a4',boxWidth:12,font:{size:11}}}},
       scales:{
-        x:{ stacked:true, grid:{color:'rgba(255,255,255,.04)'}, ticks:{color:'#8892a4',font:{size:10},maxRotation:45} },
-        y:{ stacked:true, grid:{color:'rgba(255,255,255,.04)'}, ticks:{color:'#8892a4', callback:v=>`${v}h`} },
-      },
-    },
+        x:{stacked:true,grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#8892a4',font:{size:10},maxRotation:45}},
+        y:{stacked:true,grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#8892a4',callback:v=>`${v}h`}},
+      }},
   });
 }
-
 function buildDonutChart() {
-  const ctx = document.getElementById('donut-chart'); if(!ctx) return;
-  const hrs = sp => activities.reduce((t,a)=>a.sport===sp?t+a.elapsed/3600:t,0);
-  const vals = ['run','bike','swim','other'].map(hrs);
-  if (donutChart) donutChart.destroy();
-  donutChart = new Chart(ctx, {
+  const ctx=document.getElementById('donut-chart'); if(!ctx) return;
+  const hrs=sp=>activities.reduce((t,a)=>a.sport===sp?t+a.elapsed/3600:t,0);
+  const vals=['run','bike','swim','other'].map(hrs);
+  if(donutChart) donutChart.destroy();
+  donutChart=new Chart(ctx,{
     type:'doughnut',
-    data:{ labels:['Run','Bike','Swim','Other'], datasets:[{
-      data:vals,
+    data:{labels:['Run','Bike','Swim','Other'],datasets:[{data:vals,
       backgroundColor:['rgba(249,115,22,.8)','rgba(6,182,212,.8)','rgba(129,140,248,.8)','rgba(107,114,128,.8)'],
-      borderWidth:1, borderColor:'#1a1d27',
-    }]},
-    options:{
-      responsive:true, maintainAspectRatio:false,
-      plugins:{
-        legend:{ labels:{ color:'#8892a4', boxWidth:12, font:{size:11} } },
-        tooltip:{ callbacks:{ label: ctx => {
-          const v=ctx.raw, h=Math.floor(v), m=Math.round((v-h)*60);
-          return `${ctx.label}: ${h}h ${m}m`;
-        }}},
-      },
-    },
+      borderWidth:1,borderColor:'#1a1d27'}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{labels:{color:'#8892a4',boxWidth:12,font:{size:11}}},
+        tooltip:{callbacks:{label:ctx=>{const v=ctx.raw,h=Math.floor(v),m=Math.round((v-h)*60);return `${ctx.label}: ${h}h ${m}m`;}}}}},
   });
 }
 
@@ -741,19 +876,19 @@ function buildDonutChart() {
 //  ACTIVITY TABLE
 // ══════════════════════════════════════════════════════════════
 function renderTable() {
-  const tbody = document.getElementById('act-tbody');
-  if (!activities.length) {
-    tbody.innerHTML='<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:32px">No activities yet — import your Garmin CSV above.</td></tr>';
+  const tbody=document.getElementById('act-tbody');
+  if(!activities.length){
+    tbody.innerHTML='<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:32px">No activities yet — sync Strava or import a CSV above.</td></tr>';
     return;
   }
-  tbody.innerHTML = activities.slice(0,200).map(a=>`<tr>
+  tbody.innerHTML=activities.slice(0,200).map(a=>`<tr>
     <td>${a.date}</td>
     <td><span class="sport-pill ${a.sport}">${a.sport}</span></td>
     <td>${a.name}</td>
     <td>${fmtHrs(a.elapsed)}</td>
-    <td>${a.dist ? a.dist.toFixed(1)+' km' : '—'}</td>
-    <td>${a.avgHR ? Math.round(a.avgHR)+' bpm' : '—'}</td>
-    <td>${a.elev  ? Math.round(a.elev)+'m' : '—'}</td>
+    <td>${a.dist?a.dist.toFixed(1)+' km':'—'}</td>
+    <td>${a.avgHR?Math.round(a.avgHR)+' bpm':'—'}</td>
+    <td>${a.elev?Math.round(a.elev)+'m':'—'}</td>
   </tr>`).join('');
 }
 
@@ -761,61 +896,51 @@ function renderTable() {
 //  TRAINING PLAN
 // ══════════════════════════════════════════════════════════════
 function getCurrentPhase() {
-  const today = new Date().toISOString().slice(0,10);
-  for (let i=0; i<SEASON_PHASES.length; i++)
-    if (today >= SEASON_PHASES[i].start && today <= SEASON_PHASES[i].end) return i;
-  return SEASON_PHASES.length - 1;
+  const today=new Date().toISOString().slice(0,10);
+  for(let i=0;i<SEASON_PHASES.length;i++)
+    if(today>=SEASON_PHASES[i].start&&today<=SEASON_PHASES[i].end) return i;
+  return SEASON_PHASES.length-1;
 }
-
-function getWeekType(phase, weekNum) {
-  if (phase.taperAt !== null) return 'taper';
-  if (phase.recoveryAt && weekNum % phase.recoveryAt === 0) return 'recovery';
+function getWeekType(phase,weekNum) {
+  if(phase.taperAt!==null) return 'taper';
+  if(phase.recoveryAt&&weekNum%phase.recoveryAt===0) return 'recovery';
   return 'build';
 }
-
 function weeksSince(dateStr) {
   const start=new Date(dateStr); start.setHours(0,0,0,0);
   const today=new Date(); today.setHours(0,0,0,0);
-  return Math.max(1, Math.ceil((today-start)/(7*86400000)));
+  return Math.max(1,Math.ceil((today-start)/(7*86400000)));
 }
-
 function thisWeekHrs() {
   const now=new Date(); now.setHours(23,59,59,999);
   const cut=new Date(now); cut.setDate(now.getDate()-7);
-  return activities.filter(a=>{ const d=new Date(a.date); return d>=cut && d<=now; })
-                   .reduce((t,a)=>t+a.elapsed/3600,0);
+  return activities.filter(a=>{const d=new Date(a.date);return d>=cut&&d<=now;}).reduce((t,a)=>t+a.elapsed/3600,0);
 }
-
 function isSessionDone(session) {
   const now=new Date(); now.setHours(23,59,59,999);
   const cut=new Date(now); cut.setDate(now.getDate()-7);
   return activities.some(a=>{
     const d=new Date(a.date);
-    return d>=cut && d<=now && a.sport===session.sport && (a.elapsed/60)>=session.minMins*0.75;
+    return d>=cut&&d<=now&&a.sport===session.sport&&(a.elapsed/60)>=session.minMins*0.75;
   });
 }
-
 function renderPlan() {
-  const el = document.getElementById('plan-content'); if(!el) return;
-  const idx     = getCurrentPhase();
-  const phase   = SEASON_PHASES[idx];
-  const weekNum = weeksSince(phase.start);
-  const wType   = getWeekType(phase, weekNum);
-  const doneHrs = thisWeekHrs();
-  const target  = wType==='recovery' ? phase.targetHrs*.65 : wType==='taper' ? phase.targetHrs*.5 : phase.targetHrs;
-  const pct     = Math.min(100, Math.round(doneHrs/target*100));
-  const today   = new Date().toISOString().slice(0,10);
-  const nextRace = RACES.find(r=>r.date>=today);
-  const sessions = getSessions(idx);
-
-  el.innerHTML = `
+  const el=document.getElementById('plan-content'); if(!el) return;
+  const idx=getCurrentPhase(), phase=SEASON_PHASES[idx];
+  const weekNum=weeksSince(phase.start), wType=getWeekType(phase,weekNum);
+  const doneHrs=thisWeekHrs();
+  const target=wType==='recovery'?phase.targetHrs*.65:wType==='taper'?phase.targetHrs*.5:phase.targetHrs;
+  const pct=Math.min(100,Math.round(doneHrs/target*100));
+  const today=new Date().toISOString().slice(0,10);
+  const nextRace=RACES.find(r=>r.date>=today);
+  const sessions=getSessions(idx);
+  el.innerHTML=`
     <div class="plan-header">
-      <h2>${phase.name}</h2>
-      <p>${phase.focus}</p>
+      <h2>${phase.name}</h2><p>${phase.focus}</p>
       <div class="plan-meta">
         <span>Week <strong>${weekNum}</strong> of phase</span>
         <span class="week-badge ${wType}">${wType.charAt(0).toUpperCase()+wType.slice(1)} week</span>
-        ${nextRace ? `<span>Next race: <strong>${nextRace.name}</strong> — ${new Date(nextRace.date).toLocaleDateString('en-GB',{day:'numeric',month:'short'})}</span>` : ''}
+        ${nextRace?`<span>Next race: <strong>${nextRace.name}</strong> — ${new Date(nextRace.date).toLocaleDateString('en-GB',{day:'numeric',month:'short'})}</span>`:''}
       </div>
       <div class="progress-wrap">
         <label>This week: ${fmtHrs(doneHrs*3600)} of ~${target.toFixed(0)}h target (${pct}%)</label>
@@ -823,17 +948,17 @@ function renderPlan() {
       </div>
     </div>
     <div class="sessions-grid">
-      ${sessions.map(s => {
-        const done = isSessionDone(s);
-        const zoneStr = s.zone ? s.zone.split(/[,–]/).map(z=>`<span class="zone-chip">${z.trim()}</span>`).join('') : '';
+      ${sessions.map(s=>{
+        const done=isSessionDone(s);
+        const zoneStr=s.zone?s.zone.split(/[,–]/).map(z=>`<span class="zone-chip">${z.trim()}</span>`).join(''):'';
         return `<div class="session-card ${s.priority}${done?' done':''}">
           <div class="sc-priority ${s.priority}">${s.priority==='key'?'● KEY SESSION':s.priority==='imp'?'● IMPORTANT':'○ OPTIONAL'}</div>
           <div class="sc-sport ${s.sport}">${s.sport.toUpperCase()}</div>
           <div class="sc-title">${s.title}</div>
           <div class="sc-dur">⏱ ${s.dur}</div>
           <div class="sc-desc">${s.desc}</div>
-          ${s.tip ? `<div class="sc-tip">💡 ${s.tip}</div>` : ''}
-          ${zoneStr ? `<div class="zone-chips">${zoneStr}</div>` : ''}
+          ${s.tip?`<div class="sc-tip">💡 ${s.tip}</div>`:''}
+          ${zoneStr?`<div class="zone-chips">${zoneStr}</div>`:''}
         </div>`;
       }).join('')}
     </div>`;
@@ -843,41 +968,28 @@ function renderPlan() {
 //  ZONES PANEL
 // ══════════════════════════════════════════════════════════════
 function renderZones() {
-  const el = document.getElementById('zones-content'); if(!el) return;
-  const ftp   = getFTP();
-  const bikeZ = getBikeZones(ftp);
-  const zc    = ['z1','z2','z3','z4','z5'];
-  const tbl   = (zones, cols) => `<table class="zone-table">
+  const el=document.getElementById('zones-content'); if(!el) return;
+  const ftp=getFTP(), bikeZ=getBikeZones(ftp), zc=['z1','z2','z3','z4','z5'];
+  const tbl=(zones,cols)=>`<table class="zone-table">
     <thead><tr>${cols.map(c=>`<th>${c}</th>`).join('')}</tr></thead>
-    <tbody>${zones.map((z,i)=>`<tr>
-      <td class="${zc[i]}">${z.z}</td><td>${z.label}</td><td>${z.display}</td>
-    </tr>`).join('')}</tbody>
+    <tbody>${zones.map((z,i)=>`<tr><td class="${zc[i]}">${z.z}</td><td>${z.label}</td><td>${z.display}</td></tr>`).join('')}</tbody>
   </table>`;
-
-  el.innerHTML = `
-    <div class="chart-card">
-      <h3>Heart Rate Zones</h3>
+  el.innerHTML=`
+    <div class="chart-card"><h3>Heart Rate Zones</h3>
       <p style="font-size:.75rem;color:var(--muted);margin-bottom:8px">AeT ${AeT} bpm · AnT ${AnT} bpm</p>
       ${tbl(HR_ZONES,['Zone','Label','Range'])}
     </div>
-    <div class="chart-card">
-      <h3>Run Pace Zones</h3>
-      <p class="calib-note">${calibMeta.run}</p>
-      ${tbl(RUN_ZONES,['Zone','Label','Pace'])}
+    <div class="chart-card"><h3>Run Pace Zones</h3>
+      <p class="calib-note">${calibMeta.run}</p>${tbl(RUN_ZONES,['Zone','Label','Pace'])}
     </div>
-    <div class="chart-card">
-      <h3>Bike Power Zones</h3>
-      <div class="ftp-row">
-        <span style="font-size:.8rem">FTP:</span>
+    <div class="chart-card"><h3>Bike Power Zones</h3>
+      <div class="ftp-row"><span style="font-size:.8rem">FTP:</span>
         <input type="number" value="${ftp}" min="100" max="500" step="5" onchange="saveFTP(this.value)">
         <span style="font-size:.75rem;color:var(--muted)">W</span>
-      </div>
-      ${tbl(bikeZ,['Zone','Label','Power'])}
+      </div>${tbl(bikeZ,['Zone','Label','Power'])}
     </div>
-    <div class="chart-card">
-      <h3>Swim Pace Zones</h3>
-      <p class="calib-note">${calibMeta.swim}</p>
-      ${tbl(SWIM_ZONES,['Zone','Label','Pace'])}
+    <div class="chart-card"><h3>Swim Pace Zones</h3>
+      <p class="calib-note">${calibMeta.swim}</p>${tbl(SWIM_ZONES,['Zone','Label','Pace'])}
     </div>`;
 }
 
@@ -885,23 +997,20 @@ function renderZones() {
 //  FILE IMPORT
 // ══════════════════════════════════════════════════════════════
 function handleDrop(e) {
-  e.preventDefault();
-  document.getElementById('drop-zone').classList.remove('dragover');
-  const file = e.dataTransfer.files[0]; if(file) readAndImport(file);
+  e.preventDefault(); document.getElementById('drop-zone').classList.remove('dragover');
+  const file=e.dataTransfer.files[0]; if(file) readAndImport(file);
 }
 function handleFileInput(e) { const f=e.target.files[0]; if(f) readAndImport(f); }
-
 async function readAndImport(file) {
-  const log = document.getElementById('import-log');
+  const log=document.getElementById('import-log');
   log.style.color='var(--muted)'; log.textContent='⟳ Parsing CSV…';
-  const text   = await file.text();
-  const parsed = processCSV(text);
-  if (!parsed.length) { log.style.color='var(--key)'; log.textContent='✗ No valid activities found. Is this a Garmin Activities.csv?'; return; }
+  const text=await file.text(), parsed=processCSV(text);
+  if(!parsed.length){log.style.color='var(--key)';log.textContent='✗ No valid activities found. Is this a Garmin Activities.csv?';return;}
   log.textContent=`⟳ Uploading ${parsed.length} activities…`;
   setSyncBadge('','⟳ Uploading…');
-  const ok = await saveActivities(parsed);
-  if (!ok) { log.style.color='var(--key)'; log.textContent='✗ Upload failed. Check browser console (F12).'; setSyncBadge('err','✗ Upload failed'); return; }
-  log.style.color='var(--green)'; log.textContent=`✓ Imported ${parsed.length} activities (duplicates automatically skipped).`;
+  const ok=await saveActivities(parsed);
+  if(!ok){log.style.color='var(--key)';log.textContent='✗ Upload failed. Check browser console (F12).';setSyncBadge('err','✗ Upload failed');return;}
+  log.style.color='var(--green)'; log.textContent=`✓ Imported ${parsed.length} activities (duplicates skipped).`;
   await loadActivities();
 }
 
@@ -909,27 +1018,18 @@ async function readAndImport(file) {
 //  TABS
 // ══════════════════════════════════════════════════════════════
 function switchTab(name) {
-  const names = ['activities','plan','import','zones'];
+  const names=['activities','plan','import','zones'];
   document.querySelectorAll('.tab-btn').forEach((b,i)=>b.classList.toggle('active',names[i]===name));
   document.querySelectorAll('.tab-pane').forEach(p=>p.classList.toggle('active',p.id===`tab-${name}`));
-  if (name==='plan')  renderPlan();
-  if (name==='zones') renderZones();
+  if(name==='plan')  renderPlan();
+  if(name==='zones') renderZones();
 }
 function jumpToImport() {
   switchTab('import');
-  document.getElementById('tab-import').scrollIntoView({ behavior:'smooth' });
+  document.getElementById('tab-import').scrollIntoView({behavior:'smooth'});
 }
-
-// ══════════════════════════════════════════════════════════════
-//  REFRESH ALL
-// ══════════════════════════════════════════════════════════════
 function refreshAll() {
-  updateStats();
-  buildWeeklyChart();
-  buildDonutChart();
-  renderTable();
-  renderPlan();
-  renderZones();
+  updateStats(); buildWeeklyChart(); buildDonutChart(); renderTable(); renderPlan(); renderZones();
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -940,22 +1040,26 @@ function refreshAll() {
   setInterval(updateCountdowns, 60000);
 
   sb.auth.onAuthStateChange(async (event, session) => {
-    if (event==='SIGNED_IN' || event==='TOKEN_REFRESHED') {
-      currentUser = session.user;
+    if (event==='SIGNED_IN'||event==='TOKEN_REFRESHED') {
+      currentUser=session.user;
       showApp();
       setChartRange(12);
+      await checkStravaConnection();
+      // Handle Strava OAuth callback if code is in URL
+      if (window.location.search.includes('code=')) await handleStravaCallback();
       await loadActivities();
     } else if (event==='SIGNED_OUT') {
-      activities=[]; currentUser=null;
-      showAuthOverlay();
+      activities=[]; currentUser=null; showAuthOverlay();
     }
   });
 
   const { data:{ session } } = await sb.auth.getSession();
   if (session) {
-    currentUser = session.user;
+    currentUser=session.user;
     showApp();
     setChartRange(12);
+    await checkStravaConnection();
+    if (window.location.search.includes('code=')) await handleStravaCallback();
     await loadActivities();
   } else {
     showAuthOverlay();
