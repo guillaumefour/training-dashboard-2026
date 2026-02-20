@@ -1130,31 +1130,47 @@ function refreshAll() {
   setInterval(updateCountdowns, 60000);
 
   sb.auth.onAuthStateChange(async (event, session) => {
-    dbg('onAuthStateChange event=' + event);
-    if (event==='SIGNED_IN'||event==='TOKEN_REFRESHED'||event==='INITIAL_SESSION') {
-      if (!session) { dbg('onAuthStateChange: no session, skipping'); return; }
-      currentUser=session.user;
-      showApp();
-      setChartRange(12);
-      await checkStravaConnection();
-      if (_stravaParams) await handleStravaCallback();
-      await loadActivities();
-    } else if (event==='SIGNED_OUT') {
-      activities=[]; currentUser=null; showAuthOverlay();
+    dbg('onAuthStateChange event=' + event + ' session=' + (session ? 'yes' : 'no'));
+    try {
+      if (event==='SIGNED_IN'||event==='TOKEN_REFRESHED'||event==='INITIAL_SESSION') {
+        if (!session) { dbg('no session in event, skipping'); return; }
+        currentUser = session.user;
+        dbg('currentUser set: ' + currentUser.email);
+        // Handle Strava FIRST — before chart/UI code that might throw
+        if (_stravaParams) { dbg('handleStravaCallback from authChange'); await handleStravaCallback(); }
+        dbg('calling showApp()');
+        showApp();
+        dbg('calling setChartRange(12)');
+        try { setChartRange(12); } catch(e) { dbg('setChartRange threw: ' + e.message); }
+        dbg('calling checkStravaConnection()');
+        await checkStravaConnection();
+        dbg('calling loadActivities()');
+        await loadActivities();
+        dbg('onAuthStateChange handler done');
+      } else if (event==='SIGNED_OUT') {
+        activities=[]; currentUser=null; showAuthOverlay();
+      }
+    } catch(e) {
+      dbg('CRASH in onAuthStateChange: ' + e.message + '\n' + e.stack);
     }
   });
 
   dbg('Calling getSession()...');
-  const { data:{ session } } = await sb.auth.getSession();
-  dbg('getSession() result: ' + (session ? 'session found, user=' + session.user?.email : 'NO SESSION'));
-  if (session) {
-    currentUser=session.user;
-    showApp();
-    setChartRange(12);
-    await checkStravaConnection();
-    if (_stravaParams) await handleStravaCallback();
-    await loadActivities();
-  } else {
+  try {
+    const { data:{ session }, error } = await sb.auth.getSession();
+    dbg('getSession() result: ' + (session ? 'user=' + session.user?.email : 'NO SESSION') + (error ? ' err='+error.message : ''));
+    if (session) {
+      currentUser = session.user;
+      if (_stravaParams) { dbg('handleStravaCallback from getSession'); await handleStravaCallback(); }
+      showApp();
+      try { setChartRange(12); } catch(e) { dbg('setChartRange threw: ' + e.message); }
+      await checkStravaConnection();
+      await loadActivities();
+    } else {
+      showAuthOverlay();
+    }
+  } catch(e) {
+    dbg('CRASH in getSession(): ' + e.message);
     showAuthOverlay();
   }
 })();
