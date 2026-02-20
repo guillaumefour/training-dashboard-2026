@@ -581,6 +581,13 @@ function connectStrava() {
   window.location.href = url;
 }
 
+// Strava tokens stored in localStorage (keyed by user id)
+function saveStravaTokens(t) { localStorage.setItem('strava_' + currentUser.id, JSON.stringify(t)); }
+function loadStravaTokens() {
+  try { return JSON.parse(localStorage.getItem('strava_' + currentUser.id) || 'null'); } catch { return null; }
+}
+function clearStravaTokens() { localStorage.removeItem('strava_' + currentUser.id); }
+
 async function handleStravaCallback() {
   if (!_stravaParams) return;
   if (_stravaCallbackHandled) return;
@@ -606,33 +613,12 @@ async function handleStravaCallback() {
     if (!data.access_token) {
       stravaError('Token exchange failed: ' + (data.message || data.error || JSON.stringify(data))); return;
     }
-    // Test basic DB connectivity first
-    const t0 = await Promise.race([
-      sb.from('strava_tokens').select('user_id').eq('user_id', currentUser.id),
-      new Promise((_,rej) => setTimeout(() => rej(new Error('SELECT timed out')), 5000))
-    ]);
-    dbg('SELECT test: data=' + JSON.stringify(t0.data) + ' err=' + (t0.error ? t0.error.message + ' code=' + t0.error.code : 'none'));
-
-    // Delete + insert instead of upsert (avoids unique constraint requirement)
-    const delResult = await Promise.race([
-      sb.from('strava_tokens').delete().eq('user_id', currentUser.id),
-      new Promise((_,rej) => setTimeout(() => rej(new Error('DELETE timed out')), 5000))
-    ]);
-    dbg('DELETE result: err=' + (delResult.error ? delResult.error.message : 'none'));
-
-    const insResult = await Promise.race([
-      sb.from('strava_tokens').insert({
-        user_id:       currentUser.id,
-        athlete_id:    data.athlete?.id,
-        access_token:  data.access_token,
-        refresh_token: data.refresh_token,
-        expires_at:    data.expires_at,
-      }),
-      new Promise((_,rej) => setTimeout(() => rej(new Error('INSERT timed out')), 5000))
-    ]);
-    const dbErr = insResult.error;
-    dbg('INSERT result: status=' + insResult.status + ' err=' + (dbErr ? dbErr.message + ' code=' + dbErr.code : 'none'));
-    if (dbErr) { stravaError('Failed to save Strava tokens: ' + dbErr.message + ' (code: ' + dbErr.code + ')'); return; }
+    saveStravaTokens({
+      access_token:  data.access_token,
+      refresh_token: data.refresh_token,
+      expires_at:    data.expires_at,
+      athlete_id:    data.athlete?.id,
+    });
     setStravaLog('✓ Strava connected! Syncing activities…', 'var(--green)');
     updateStravaUI(true);
     await syncFromStrava();
@@ -657,8 +643,7 @@ function dbg(msg) {
 }
 
 async function getValidStravaToken() {
-  const { data: row } = await sb.from('strava_tokens')
-    .select('*').eq('user_id', currentUser.id).single();
+  const row = loadStravaTokens();
   if (!row) return null;
 
   // Refresh if token expires within 5 minutes
@@ -670,10 +655,7 @@ async function getValidStravaToken() {
     });
     const data = await res.json();
     if (!data.access_token) return null;
-    await sb.from('strava_tokens').upsert({
-      user_id:currentUser.id, athlete_id:row.athlete_id,
-      access_token:data.access_token, refresh_token:data.refresh_token, expires_at:data.expires_at,
-    }, { onConflict:'user_id' });
+    saveStravaTokens({ access_token:data.access_token, refresh_token:data.refresh_token, expires_at:data.expires_at, athlete_id:row.athlete_id });
     return data.access_token;
   }
   return row.access_token;
@@ -729,15 +711,13 @@ async function syncFromStrava() {
 
 async function disconnectStrava() {
   if (!confirm('Disconnect Strava? Your existing activities will remain in the database.')) return;
-  await sb.from('strava_tokens').delete().eq('user_id', currentUser.id);
+  clearStravaTokens();
   updateStravaUI(false);
   setStravaLog('Strava disconnected.', 'var(--muted)');
 }
 
 async function checkStravaConnection() {
-  const { data } = await sb.from('strava_tokens')
-    .select('athlete_id').eq('user_id', currentUser.id).single();
-  const connected = !!data;
+  const connected = !!loadStravaTokens();
   stravaConnected = connected;
   updateStravaUI(connected);
   return connected;
