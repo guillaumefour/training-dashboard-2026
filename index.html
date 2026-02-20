@@ -1117,9 +1117,6 @@ function refreshAll() {
   updateCountdowns();
   setInterval(updateCountdowns, 60000);
 
-  // onAuthStateChange handles normal login/logout — NOT the Strava callback.
-  // Making DB calls inside onAuthStateChange can deadlock the Supabase client,
-  // so the Strava callback is handled only from getSession() below.
   sb.auth.onAuthStateChange(async (event, session) => {
     if (event==='SIGNED_IN'||event==='TOKEN_REFRESHED'||event==='INITIAL_SESSION') {
       if (!session) return;
@@ -1128,27 +1125,16 @@ function refreshAll() {
       try { setChartRange(12); } catch(e) { console.error('Chart init error:', e); }
       await checkStravaConnection();
       await loadActivities();
+      // Defer Strava callback to AFTER this auth cycle fully completes,
+      // so it runs outside any Supabase internal lock.
+      if (_stravaParams) setTimeout(() => handleStravaCallback(), 0);
     } else if (event==='SIGNED_OUT') {
       activities=[]; currentUser=null; showAuthOverlay();
     }
   });
 
-  // getSession() is fully resolved before we proceed — safe to make DB calls here.
   const { data:{ session } } = await sb.auth.getSession();
-  dbg('getSession: ' + (session ? 'user=' + session.user?.email : 'no session'));
-  if (session) {
-    currentUser = session.user;
-    if (_stravaParams) {
-      dbg('Strava callback detected, handling after getSession...');
-      await handleStravaCallback();
-    }
-    showApp();
-    try { setChartRange(12); } catch(e) { console.error('Chart init error:', e); }
-    await checkStravaConnection();
-    await loadActivities();
-  } else {
-    showAuthOverlay();
-  }
+  if (!session) showAuthOverlay();
 })();
 </script>
 </body>
