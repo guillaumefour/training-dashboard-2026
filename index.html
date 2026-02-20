@@ -168,7 +168,9 @@ code{font-size:.8em;background:var(--surface2);padding:1px 5px;border-radius:3px
 <body>
 
 <!-- ═══ DEBUG BANNER (hidden by default) ═══ -->
-<div id="debug-banner" style="display:none;position:fixed;top:0;left:0;right:0;z-index:9999;background:#ef4444;color:#fff;padding:12px 16px;font-family:monospace;font-size:.8rem;white-space:pre-wrap;word-break:break-all;max-height:50vh;overflow-y:auto"></div>
+<div id="debug-banner" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:9999;background:rgba(15,17,23,.95);border-top:2px solid #ef4444;color:#fff;padding:10px 16px 10px 12px;font-family:monospace;font-size:.75rem;white-space:pre-wrap;word-break:break-all;max-height:35vh;overflow-y:auto">
+  <button onclick="document.getElementById('debug-banner').style.display='none'" style="position:sticky;top:0;float:right;background:#ef4444;border:none;color:#fff;font-size:.8rem;padding:2px 8px;border-radius:4px;cursor:pointer;margin-left:8px">✕ close</button>
+</div>
 
 <!-- ═══ AUTH OVERLAY ═══ -->
 <div id="auth-overlay">
@@ -649,7 +651,9 @@ function dbg(msg) {
   const el = document.getElementById('debug-banner');
   if (!el) return;
   el.style.display = 'block';
-  el.textContent += '\n' + msg;
+  // Append as a text node so the close button stays intact
+  el.appendChild(document.createTextNode('\n' + msg));
+  el.scrollTop = el.scrollHeight;
 }
 
 async function getValidStravaToken() {
