@@ -175,7 +175,7 @@ code{font-size:.8em;background:var(--surface2);padding:1px 5px;border-radius:3px
 
     <!-- Step 1: email -->
     <div id="auth-step1">
-      <p>Enter your email and we'll send a 6-digit code.</p>
+      <p>Enter your email and we'll send a 8-digit code.</p>
       <input type="email" id="auth-email" placeholder="you@email.com" autocomplete="email"
              onkeydown="if(event.key==='Enter')sendCode()">
       <button class="btn-primary" onclick="sendCode()">Send code</button>
@@ -183,8 +183,8 @@ code{font-size:.8em;background:var(--surface2);padding:1px 5px;border-radius:3px
 
     <!-- Step 2: code (hidden until email sent) -->
     <div id="auth-step2" style="display:none">
-      <p>Enter the 6-digit code we sent to <strong id="auth-email-display"></strong></p>
-      <input type="text" id="auth-code" placeholder="123456" maxlength="6"
+      <p>Enter the 8-digit code we sent to <strong id="auth-email-display"></strong></p>
+      <input type="text" id="auth-code" placeholder="12345678" maxlength="8"
              inputmode="numeric" autocomplete="one-time-code"
              onkeydown="if(event.key==='Enter')verifyCode()"
              style="letter-spacing:.3em;font-size:1.4rem;text-align:center">
@@ -482,7 +482,7 @@ async function sendCode() {
 async function verifyCode() {
   const token = document.getElementById('auth-code').value.trim();
   const msg   = document.getElementById('auth-msg');
-  if (!token) { msg.style.color='var(--key)'; msg.textContent='Please enter the 6-digit code.'; return; }
+  if (!token) { msg.style.color='var(--key)'; msg.textContent='Please enter the 8-digit code.'; return; }
   msg.style.color='var(--muted)'; msg.textContent='Verifying…';
   const { error } = await sb.auth.verifyOtp({ email: _otpEmail, token, type: 'email' });
   if (error) { msg.style.color='var(--key)'; msg.textContent='Invalid or expired code. Try again.'; return; }
