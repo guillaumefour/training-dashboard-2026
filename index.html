@@ -175,7 +175,7 @@ code{font-size:.8em;background:var(--surface2);padding:1px 5px;border-radius:3px
 
     <!-- Step 1: email -->
     <div id="auth-step1">
-      <p>Enter your email and we'll send a 8-digit code.</p>
+      <p>Enter your email and we'll send an 8-digit code.</p>
       <input type="email" id="auth-email" placeholder="you@email.com" autocomplete="email"
              onkeydown="if(event.key==='Enter')sendCode()">
       <button class="btn-primary" onclick="sendCode()">Send code</button>
@@ -458,6 +458,7 @@ function getSessions(phaseIdx) {
 // ══════════════════════════════════════════════════════════════
 let activities=[], currentUser=null, weeklyChart=null, donutChart=null, chartWeeks=12;
 let stravaConnected = false;
+let _stravaCallbackHandled = false;
 
 // ══════════════════════════════════════════════════════════════
 //  AUTH
@@ -563,18 +564,21 @@ function connectStrava() {
 }
 
 async function handleStravaCallback() {
+  // Guard: only run once even if called from both onAuthStateChange and getSession()
+  if (_stravaCallbackHandled) return;
+  _stravaCallbackHandled = true;
+
   const params = new URLSearchParams(window.location.search);
   const code   = params.get('code');
   const error  = params.get('error');
+  cleanUrl(); // Always clean URL first
   if (error) {
-    setStravaLog('✗ Strava connection was cancelled.', 'var(--key)');
-    cleanUrl(); return;
+    stravaError('Strava connection was cancelled.'); return;
   }
-  if (!code) return;
+  if (!code) { _stravaCallbackHandled = false; return; }
 
   // Exchange code for tokens via Edge Function
   setStravaLog('⟳ Connecting to Strava…', 'var(--muted)');
-  cleanUrl();
   try {
     const res  = await fetch(`${SUPABASE_URL}/functions/v1/strava-auth`, {
       method: 'POST',
@@ -582,23 +586,31 @@ async function handleStravaCallback() {
       body: JSON.stringify({ action:'exchange', code }),
     });
     const data = await res.json();
-    if (data.errors || !data.access_token) {
-      setStravaLog('✗ Token exchange failed: ' + (data.message || JSON.stringify(data)), 'var(--key)'); return;
+    if (!data.access_token) {
+      stravaError('Token exchange failed: ' + (data.message || data.error || JSON.stringify(data))); return;
     }
     // Save tokens to Supabase
-    await sb.from('strava_tokens').upsert({
+    const { error: dbErr } = await sb.from('strava_tokens').upsert({
       user_id:       currentUser.id,
       athlete_id:    data.athlete?.id,
       access_token:  data.access_token,
       refresh_token: data.refresh_token,
       expires_at:    data.expires_at,
     }, { onConflict:'user_id' });
+    if (dbErr) { stravaError('Failed to save Strava tokens: ' + dbErr.message); return; }
     setStravaLog('✓ Strava connected! Syncing activities…', 'var(--green)');
     updateStravaUI(true);
     await syncFromStrava();
   } catch(e) {
-    setStravaLog('✗ Error: ' + e.message, 'var(--key)');
+    stravaError('Error: ' + e.message);
   }
+}
+
+function stravaError(msg) {
+  setStravaLog('✗ ' + msg, 'var(--key)');
+  setSyncBadge('err', '✗ Strava error');
+  // Also show a visible alert so the error isn't hidden in the Import tab
+  alert('Strava connection failed:\n\n' + msg + '\n\nCheck the Import tab for details, and open browser DevTools (F12 → Console) for more info.');
 }
 
 async function getValidStravaToken() {
