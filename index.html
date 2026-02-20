@@ -167,6 +167,9 @@ code{font-size:.8em;background:var(--surface2);padding:1px 5px;border-radius:3px
 </head>
 <body>
 
+<!-- ═══ DEBUG BANNER (hidden by default) ═══ -->
+<div id="debug-banner" style="display:none;position:fixed;top:0;left:0;right:0;z-index:9999;background:#ef4444;color:#fff;padding:12px 16px;font-family:monospace;font-size:.8rem;white-space:pre-wrap;word-break:break-all;max-height:50vh;overflow-y:auto"></div>
+
 <!-- ═══ AUTH OVERLAY ═══ -->
 <div id="auth-overlay">
   <div class="auth-card">
@@ -330,6 +333,8 @@ const _stravaParams = (() => {
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
   auth: { detectSessionInUrl: false }  // prevent Supabase stealing ?code= from Strava
 });
+console.log('[Dashboard] _stravaParams captured:', _stravaParams);
+console.log('[Dashboard] URL at load:', window.location.href);
 
 // ══════════════════════════════════════════════════════════════
 //  RACES
@@ -579,31 +584,37 @@ function connectStrava() {
 }
 
 async function handleStravaCallback() {
-  if (!_stravaParams) return;
-  // Guard: only run once even if called from both onAuthStateChange and getSession()
-  if (_stravaCallbackHandled) return;
+  dbg('handleStravaCallback called. _stravaParams=' + JSON.stringify(_stravaParams));
+  if (!_stravaParams) { dbg('No _stravaParams, returning'); return; }
+  if (_stravaCallbackHandled) { dbg('Already handled, returning'); return; }
   _stravaCallbackHandled = true;
 
-  cleanUrl(); // Clean ?code=... from URL
+  cleanUrl();
   if (_stravaParams.error) {
-    stravaError('Strava connection was cancelled.'); return;
+    stravaError('Strava connection was cancelled: ' + _stravaParams.error); return;
   }
   const code = _stravaParams.code;
-  if (!code) { _stravaCallbackHandled = false; return; }
+  dbg('code=' + (code ? code.slice(0,8) + '...' : 'NULL'));
+  if (!code) { stravaError('No code returned from Strava'); _stravaCallbackHandled = false; return; }
 
-  // Exchange code for tokens via Edge Function
   setStravaLog('⟳ Connecting to Strava…', 'var(--muted)');
+  const edgeFnUrl = `${SUPABASE_URL}/functions/v1/strava-auth`;
+  dbg('Calling Edge Function: ' + edgeFnUrl);
   try {
-    const res  = await fetch(`${SUPABASE_URL}/functions/v1/strava-auth`, {
+    const res  = await fetch(edgeFnUrl, {
       method: 'POST',
       headers: { 'Content-Type':'application/json', 'Authorization':`Bearer ${SUPABASE_ANON_KEY}` },
       body: JSON.stringify({ action:'exchange', code }),
     });
-    const data = await res.json();
+    dbg('Edge function response status: ' + res.status);
+    const text = await res.text();
+    dbg('Edge function response body: ' + text.slice(0, 200));
+    let data;
+    try { data = JSON.parse(text); } catch(e) { stravaError('Edge function returned non-JSON: ' + text.slice(0,100)); return; }
     if (!data.access_token) {
       stravaError('Token exchange failed: ' + (data.message || data.error || JSON.stringify(data))); return;
     }
-    // Save tokens to Supabase
+    dbg('Got access_token, saving to DB...');
     const { error: dbErr } = await sb.from('strava_tokens').upsert({
       user_id:       currentUser.id,
       athlete_id:    data.athlete?.id,
@@ -612,19 +623,28 @@ async function handleStravaCallback() {
       expires_at:    data.expires_at,
     }, { onConflict:'user_id' });
     if (dbErr) { stravaError('Failed to save Strava tokens: ' + dbErr.message); return; }
+    dbg('Tokens saved. Strava connected!');
     setStravaLog('✓ Strava connected! Syncing activities…', 'var(--green)');
     updateStravaUI(true);
     await syncFromStrava();
   } catch(e) {
-    stravaError('Error: ' + e.message);
+    stravaError('Fetch error: ' + e.message);
   }
 }
 
 function stravaError(msg) {
+  console.error('[Strava] ERROR:', msg);
   setStravaLog('✗ ' + msg, 'var(--key)');
   setSyncBadge('err', '✗ Strava error');
-  // Also show a visible alert so the error isn't hidden in the Import tab
-  alert('Strava connection failed:\n\n' + msg + '\n\nCheck the Import tab for details, and open browser DevTools (F12 → Console) for more info.');
+  dbg('STRAVA ERROR: ' + msg);
+}
+
+function dbg(msg) {
+  console.log('[Dashboard debug]', msg);
+  const el = document.getElementById('debug-banner');
+  if (!el) return;
+  el.style.display = 'block';
+  el.textContent += '\n' + msg;
 }
 
 async function getValidStravaToken() {
@@ -1105,16 +1125,18 @@ function refreshAll() {
 //  INIT
 // ══════════════════════════════════════════════════════════════
 (async function init() {
+  dbg('init() start. _stravaParams=' + JSON.stringify(_stravaParams));
   updateCountdowns();
   setInterval(updateCountdowns, 60000);
 
   sb.auth.onAuthStateChange(async (event, session) => {
-    if (event==='SIGNED_IN'||event==='TOKEN_REFRESHED') {
+    dbg('onAuthStateChange event=' + event);
+    if (event==='SIGNED_IN'||event==='TOKEN_REFRESHED'||event==='INITIAL_SESSION') {
+      if (!session) { dbg('onAuthStateChange: no session, skipping'); return; }
       currentUser=session.user;
       showApp();
       setChartRange(12);
       await checkStravaConnection();
-      // Handle Strava OAuth callback if code is in URL
       if (_stravaParams) await handleStravaCallback();
       await loadActivities();
     } else if (event==='SIGNED_OUT') {
@@ -1122,7 +1144,9 @@ function refreshAll() {
     }
   });
 
+  dbg('Calling getSession()...');
   const { data:{ session } } = await sb.auth.getSession();
+  dbg('getSession() result: ' + (session ? 'session found, user=' + session.user?.email : 'NO SESSION'));
   if (session) {
     currentUser=session.user;
     showApp();
