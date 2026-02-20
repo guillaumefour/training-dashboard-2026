@@ -314,7 +314,22 @@ code{font-size:.8em;background:var(--surface2);padding:1px 5px;border-radius:3px
 const SUPABASE_URL      = 'https://wvdiisesaijsbgskjaew.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind2ZGlpc2VzYWlqc2Jnc2tqYWV3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE0OTA1MjAsImV4cCI6MjA4NzA2NjUyMH0.vA2K2cDuVBlbULfpoqdQMqqZgrqr9xTPwLza1dXDJgY';
 const STRAVA_CLIENT_ID  = '204131'; // just the number e.g. 12345
-const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// Capture Strava OAuth params IMMEDIATELY, before Supabase client is created.
+// Supabase (PKCE mode) also uses ?code= and will consume it from the URL
+// before our code can read it. Strava callbacks always include a 'scope' param;
+// Supabase PKCE callbacks do not — so we use that to tell them apart.
+const _stravaParams = (() => {
+  const p = new URLSearchParams(window.location.search);
+  if (p.get('scope') !== null) {
+    return { code: p.get('code'), error: p.get('error') };
+  }
+  return null;
+})();
+
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+  auth: { detectSessionInUrl: false }  // prevent Supabase stealing ?code= from Strava
+});
 
 // ══════════════════════════════════════════════════════════════
 //  RACES
@@ -564,17 +579,16 @@ function connectStrava() {
 }
 
 async function handleStravaCallback() {
+  if (!_stravaParams) return;
   // Guard: only run once even if called from both onAuthStateChange and getSession()
   if (_stravaCallbackHandled) return;
   _stravaCallbackHandled = true;
 
-  const params = new URLSearchParams(window.location.search);
-  const code   = params.get('code');
-  const error  = params.get('error');
-  cleanUrl(); // Always clean URL first
-  if (error) {
+  cleanUrl(); // Clean ?code=... from URL
+  if (_stravaParams.error) {
     stravaError('Strava connection was cancelled.'); return;
   }
+  const code = _stravaParams.code;
   if (!code) { _stravaCallbackHandled = false; return; }
 
   // Exchange code for tokens via Edge Function
@@ -1101,7 +1115,7 @@ function refreshAll() {
       setChartRange(12);
       await checkStravaConnection();
       // Handle Strava OAuth callback if code is in URL
-      if (window.location.search.includes('code=')) await handleStravaCallback();
+      if (_stravaParams) await handleStravaCallback();
       await loadActivities();
     } else if (event==='SIGNED_OUT') {
       activities=[]; currentUser=null; showAuthOverlay();
@@ -1114,7 +1128,7 @@ function refreshAll() {
     showApp();
     setChartRange(12);
     await checkStravaConnection();
-    if (window.location.search.includes('code=')) await handleStravaCallback();
+    if (_stravaParams) await handleStravaCallback();
     await loadActivities();
   } else {
     showAuthOverlay();
