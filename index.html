@@ -330,9 +330,7 @@ const _stravaParams = (() => {
   return null;
 })();
 
-const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-  auth: { detectSessionInUrl: false }  // prevent Supabase stealing ?code= from Strava
-});
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // ══════════════════════════════════════════════════════════════
 //  RACES
@@ -589,6 +587,7 @@ function loadStravaTokens() {
 function clearStravaTokens() { localStorage.removeItem('strava_' + currentUser.id); }
 
 async function handleStravaCallback() {
+  dbg('handleStravaCallback: _stravaParams=' + JSON.stringify(_stravaParams) + ' handled=' + _stravaCallbackHandled);
   if (!_stravaParams) return;
   if (_stravaCallbackHandled) return;
   _stravaCallbackHandled = true;
@@ -1117,23 +1116,25 @@ function refreshAll() {
   updateCountdowns();
   setInterval(updateCountdowns, 60000);
 
-  sb.auth.onAuthStateChange(async (event, session) => {
+  sb.auth.onAuthStateChange((event, session) => {
+    dbg('auth event=' + event);
     if (event==='SIGNED_IN'||event==='TOKEN_REFRESHED'||event==='INITIAL_SESSION') {
       if (!session) return;
       currentUser = session.user;
       showApp();
-      try { setChartRange(12); } catch(e) { console.error('Chart init error:', e); }
-      await checkStravaConnection();
-      await loadActivities();
-      // Defer Strava callback to AFTER this auth cycle fully completes,
-      // so it runs outside any Supabase internal lock.
-      if (_stravaParams) setTimeout(() => handleStravaCallback(), 0);
+      try { setChartRange(12); } catch(e) {}
+      // Fire-and-forget — no await so the handler returns instantly
+      // and releases any internal Supabase lock immediately
+      checkStravaConnection();
+      loadActivities();
+      if (_stravaParams) handleStravaCallback();
     } else if (event==='SIGNED_OUT') {
       activities=[]; currentUser=null; showAuthOverlay();
     }
   });
 
   const { data:{ session } } = await sb.auth.getSession();
+  dbg('getSession: ' + (session ? session.user?.email : 'none'));
   if (!session) showAuthOverlay();
 })();
 </script>
