@@ -167,6 +167,9 @@ code{font-size:.8em;background:var(--surface2);padding:1px 5px;border-radius:3px
 </head>
 <body>
 
+<!-- ═══ DEBUG BANNER ═══ -->
+<div id="debug-banner" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:9999;background:rgba(15,17,23,.95);border-top:2px solid #ef4444;color:#fff;padding:10px 16px;font-family:monospace;font-size:.75rem;white-space:pre-wrap;word-break:break-all;max-height:35vh;overflow-y:auto"><button onclick="document.getElementById('debug-banner').style.display='none'" style="float:right;background:#ef4444;border:none;color:#fff;font-size:.8rem;padding:2px 8px;border-radius:4px;cursor:pointer;margin-left:8px">✕</button></div>
+
 <!-- ═══ AUTH OVERLAY ═══ -->
 <div id="auth-overlay">
   <div class="auth-card">
@@ -644,7 +647,14 @@ function stravaError(msg) {
   setSyncBadge('err', '✗ Strava error');
 }
 
-function dbg(msg) { console.log('[Strava debug]', msg); }
+function dbg(msg) {
+  console.log('[dbg]', msg);
+  const el = document.getElementById('debug-banner');
+  if (!el) return;
+  el.style.display = 'block';
+  el.appendChild(document.createTextNode(msg + '\n'));
+  el.scrollTop = el.scrollHeight;
+}
 
 async function getValidStravaToken() {
   const { data: row } = await sb.from('strava_tokens')
@@ -1127,11 +1137,13 @@ function refreshAll() {
   updateCountdowns();
   setInterval(updateCountdowns, 60000);
 
+  // onAuthStateChange handles normal login/logout — NOT the Strava callback.
+  // Making DB calls inside onAuthStateChange can deadlock the Supabase client,
+  // so the Strava callback is handled only from getSession() below.
   sb.auth.onAuthStateChange(async (event, session) => {
     if (event==='SIGNED_IN'||event==='TOKEN_REFRESHED'||event==='INITIAL_SESSION') {
       if (!session) return;
       currentUser = session.user;
-      if (_stravaParams) await handleStravaCallback();
       showApp();
       try { setChartRange(12); } catch(e) { console.error('Chart init error:', e); }
       await checkStravaConnection();
@@ -1141,10 +1153,15 @@ function refreshAll() {
     }
   });
 
+  // getSession() is fully resolved before we proceed — safe to make DB calls here.
   const { data:{ session } } = await sb.auth.getSession();
+  dbg('getSession: ' + (session ? 'user=' + session.user?.email : 'no session'));
   if (session) {
     currentUser = session.user;
-    if (_stravaParams) await handleStravaCallback();
+    if (_stravaParams) {
+      dbg('Strava callback detected, handling after getSession...');
+      await handleStravaCallback();
+    }
     showApp();
     try { setChartRange(12); } catch(e) { console.error('Chart init error:', e); }
     await checkStravaConnection();
