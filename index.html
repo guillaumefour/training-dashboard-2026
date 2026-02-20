@@ -614,15 +614,20 @@ async function handleStravaCallback() {
     if (!data.access_token) {
       stravaError('Token exchange failed: ' + (data.message || data.error || JSON.stringify(data))); return;
     }
-    dbg('Got access_token, saving to DB...');
-    const { error: dbErr } = await sb.from('strava_tokens').upsert({
-      user_id:       currentUser.id,
-      athlete_id:    data.athlete?.id,
-      access_token:  data.access_token,
-      refresh_token: data.refresh_token,
-      expires_at:    data.expires_at,
-    }, { onConflict:'user_id' });
-    if (dbErr) { stravaError('Failed to save Strava tokens: ' + dbErr.message); return; }
+    dbg('Got access_token, saving to DB... user_id=' + currentUser.id);
+    const upsertResult = await Promise.race([
+      sb.from('strava_tokens').upsert({
+        user_id:       currentUser.id,
+        athlete_id:    data.athlete?.id,
+        access_token:  data.access_token,
+        refresh_token: data.refresh_token,
+        expires_at:    data.expires_at,
+      }, { onConflict:'user_id' }),
+      new Promise((_,reject) => setTimeout(() => reject(new Error('upsert timed out after 8s — likely missing RLS policy')), 8000))
+    ]);
+    const dbErr = upsertResult.error;
+    dbg('upsert done. status=' + upsertResult.status + ' dbErr=' + (dbErr ? dbErr.message + ' code=' + dbErr.code : 'none'));
+    if (dbErr) { stravaError('Failed to save Strava tokens: ' + dbErr.message + ' (code: ' + dbErr.code + ')'); return; }
     dbg('Tokens saved. Strava connected!');
     setStravaLog('✓ Strava connected! Syncing activities…', 'var(--green)');
     updateStravaUI(true);
