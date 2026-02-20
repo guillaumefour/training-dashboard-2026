@@ -172,10 +172,30 @@ code{font-size:.8em;background:var(--surface2);padding:1px 5px;border-radius:3px
   <div class="auth-card">
     <div style="font-size:2.5rem;margin-bottom:8px">🏅</div>
     <h1>Training Dashboard</h1>
-    <p>Enter your email and we'll send a magic link — no password needed.</p>
-    <input type="email" id="auth-email" placeholder="you@email.com" autocomplete="email"
-           onkeydown="if(event.key==='Enter')sendMagicLink()">
-    <button class="btn-primary" onclick="sendMagicLink()">Send magic link</button>
+
+    <!-- Step 1: email -->
+    <div id="auth-step1">
+      <p>Enter your email and we'll send a 6-digit code.</p>
+      <input type="email" id="auth-email" placeholder="you@email.com" autocomplete="email"
+             onkeydown="if(event.key==='Enter')sendCode()">
+      <button class="btn-primary" onclick="sendCode()">Send code</button>
+    </div>
+
+    <!-- Step 2: code (hidden until email sent) -->
+    <div id="auth-step2" style="display:none">
+      <p>Enter the 6-digit code we sent to <strong id="auth-email-display"></strong></p>
+      <input type="text" id="auth-code" placeholder="123456" maxlength="6"
+             inputmode="numeric" autocomplete="one-time-code"
+             onkeydown="if(event.key==='Enter')verifyCode()"
+             style="letter-spacing:.3em;font-size:1.4rem;text-align:center">
+      <button class="btn-primary" onclick="verifyCode()">Verify</button>
+      <div style="margin-top:10px">
+        <button onclick="showStep1()" style="background:none;border:none;color:var(--muted);font-size:.8rem;cursor:pointer;text-decoration:underline">
+          Use a different email
+        </button>
+      </div>
+    </div>
+
     <div id="auth-msg"></div>
   </div>
 </div>
@@ -442,14 +462,37 @@ let stravaConnected = false;
 // ══════════════════════════════════════════════════════════════
 //  AUTH
 // ══════════════════════════════════════════════════════════════
-async function sendMagicLink() {
+let _otpEmail = '';
+
+async function sendCode() {
   const email = document.getElementById('auth-email').value.trim();
   const msg   = document.getElementById('auth-msg');
   if (!email) { msg.style.color='var(--key)'; msg.textContent='Please enter your email address.'; return; }
   msg.style.color='var(--muted)'; msg.textContent='Sending…';
-  const { error } = await sb.auth.signInWithOtp({ email, options:{ emailRedirectTo: location.href.split('?')[0] } });
+  const { error } = await sb.auth.signInWithOtp({ email, options:{ shouldCreateUser: true } });
   if (error) { msg.style.color='var(--key)'; msg.textContent=error.message; return; }
-  msg.style.color='var(--green)'; msg.textContent='✓ Magic link sent! Check your inbox (and spam folder).';
+  _otpEmail = email;
+  document.getElementById('auth-email-display').textContent = email;
+  document.getElementById('auth-step1').style.display = 'none';
+  document.getElementById('auth-step2').style.display = 'block';
+  document.getElementById('auth-code').focus();
+  msg.style.color='var(--green)'; msg.textContent='✓ Code sent — check your inbox (and spam folder).';
+}
+
+async function verifyCode() {
+  const token = document.getElementById('auth-code').value.trim();
+  const msg   = document.getElementById('auth-msg');
+  if (!token) { msg.style.color='var(--key)'; msg.textContent='Please enter the 6-digit code.'; return; }
+  msg.style.color='var(--muted)'; msg.textContent='Verifying…';
+  const { error } = await sb.auth.verifyOtp({ email: _otpEmail, token, type: 'email' });
+  if (error) { msg.style.color='var(--key)'; msg.textContent='Invalid or expired code. Try again.'; return; }
+  // onAuthStateChange will handle showing the app
+}
+
+function showStep1() {
+  document.getElementById('auth-step1').style.display = 'block';
+  document.getElementById('auth-step2').style.display = 'none';
+  document.getElementById('auth-msg').textContent = '';
 }
 async function logout() { await sb.auth.signOut(); }
 function showApp()         { document.getElementById('auth-overlay').style.display='none'; document.getElementById('app').style.display='block'; }
