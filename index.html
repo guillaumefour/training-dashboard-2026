@@ -422,66 +422,122 @@ function mk(id,sport,priority,title,zone,dur,minMins,desc,tip='') {
   return {id,sport,priority,title,zone,dur,minMins,desc,tip};
 }
 
-function getSessions(phaseIdx) {
+function getSessions(phaseIdx, weekType) {
   const K='key',I='imp',O='opt';
+  // weekType: 'build' | 'recovery' | 'taper'
+  // Taper phases always receive 'taper'; other phases receive 'build' or 'recovery'.
   switch(phaseIdx) {
-    case 0: return [
-      mk('b-lr','run', K,'Long Easy Run',         'Z2',     '1h 30m', 80, "Build your aerobic engine. Keep HR below 145 the entire time. Walk uphills if needed.", "Time on feet is the goal — pace is irrelevant."),
-      mk('b-lb','bike',K,'Long Endurance Ride',   'Z2',     '2h 30m',120, "Steady riding at 55–75% FTP. Cadence 85–95rpm. Practice nutrition every 30–45 min.", "Great time to work out your race nutrition strategy."),
-      mk('b-sw','swim',I,'Technique Swim',         'Z1–Z2',  '45m',   40,  "Focus on catch and pull. Use paddles for half the session. Quality over quantity.", "Video yourself underwater if you can — eye-opening."),
-      mk('b-mr','run', I,'Mid-Week Easy Run',     'Z2',     '50m',   40,  "Comfortable conversational pace. 30 min is fine if that's all you have."),
-      mk('b-bi','bike',I,'Aerobic Bike Intervals','Z2–Z3',  '1h',    50,  "2 × 15 min at top of Z2 into Z3. Builds sustainable power base."),
-      mk('b-os','swim',O,'Easy Swim',              'Z1',     '30m',   25,  "Just get in the water. Drills or easy laps."),
-    ];
-    case 1: return [
-      mk('m-lr','run', K,'Long Run',            'Z2',    '1h 45m', 90, "Your most important session. Build towards 30–32 km. Conversational pace throughout.", "Fuel every 45 min. Protein within 30 min of finishing."),
-      mk('m-te','run', K,'Tempo Run',           'Z3–Z4', '50m',    40, "15 min warm-up. 20–25 min at marathon goal pace. 10 min cool-down.", "Should feel hard but sustainable. If HR spikes above Z4, ease off."),
-      mk('m-ml','run', I,'Medium Long Run',     'Z2',    '1h 15m', 70, "Bridging session. Easy effort, building weekly volume."),
-      mk('m-rb','bike',I,'Recovery Ride',        'Z1–Z2', '1h',     55, "Active recovery on the bike. Genuinely easy — helps your running legs."),
-      mk('m-sw','swim',I,'Swim Maintenance',    'Z1–Z2', '40m',    35, "Keep the swim habit going. Easy aerobic work only."),
-      mk('m-or','run', O,'Optional Easy Run',   'Z1',    '30m',    25, "Only if your legs genuinely feel good."),
-    ];
+
+    // ── PHASE 0: Base Building ─────────────────────────────────
+    case 0:
+      if(weekType==='recovery') return [
+        mk('b-ri','run', I,'Easy Aerobic Run',    'Z1–Z2','45m',   35,"Back off the long run this week. Keep it conversational — HR under 140 the whole time. If the legs feel flat, walk sections freely.","Recovery week: sleep and eat well, these are training too."),
+        mk('b-rbi','bike',I,'Easy Spin',          'Z1–Z2','1h 15m',60,"Flush out the accumulated fatigue from the last build block. Cadence over 90 rpm, zero intensity.","If you're tired, 45 min is enough. Quality of rest matters more than ticking a box."),
+        mk('b-rsw','swim',I,'Technique Swim',     'Z1',   '40m',   35,"This week the pool is for skill, not fitness. Focus on one thing: high elbow on the catch. Drills for half the session.","Video your stroke if you can — even a phone propped on the lane rope is useful."),
+        mk('b-ros','run', O,'Short Shakeout',     'Z1',   '25m',   20,"Optional 20–25 min jog. Only if your legs feel genuinely good. Skip it without guilt."),
+      ];
+      return [ // build
+        mk('b-lr','run', K,'Long Easy Run',        'Z2',   '1h 30m',80,"The cornerstone of your aerobic base. Keep HR below 145 the entire run — walk uphills, slow down on the flat, never let it drift into Z3. Time on feet is the only goal.","Pace is irrelevant right now. An athlete who builds base slowly beats one who rushes."),
+        mk('b-lb','bike',K,'Long Endurance Ride',  'Z2',   '2h 30m',120,"Steady riding at 55–75% FTP. Cadence 85–95 rpm throughout. Practise fuelling every 30–45 min — this is also nutrition training.","Great time to test your race nutrition. Find what works now, not on race day."),
+        mk('b-sw','swim',I,'Technique Swim',       'Z1–Z2','45m',   40,"Focus on catch and pull mechanics. Use paddles for half the session. Quality absolutely over quantity — 10 good strokes beat 100 sloppy ones.","Video yourself if you can — the difference between how you think you swim and how you actually swim is always surprising."),
+        mk('b-mr','run', I,'Mid-Week Easy Run',    'Z2',   '50m',   40,"Comfortable conversational pace. HR under 145. If you only have 30 min, 30 min is fine."),
+        mk('b-bi','bike',I,'Aerobic Bike Intervals','Z2–Z3','1h',   50,"Warm-up 15 min, then 2 × 15 min at the top of Z2 pushing into Z3, 5 min easy between. Cool down. Builds sustainable aerobic power."),
+        mk('b-os','swim',O,'Easy Swim',            'Z1',   '30m',   25,"Just get in the water. Drills or easy laps — no targets, no clock."),
+      ];
+
+    // ── PHASE 1: Marathon Build ────────────────────────────────
+    case 1:
+      if(weekType==='recovery') return [
+        mk('m-rsr','run', I,'Easy Medium Run',    'Z2',   '55m',   45,"Shorter than your usual long run but still purposeful. Completely conversational pace — if you can't speak in full sentences you're going too hard.","Recovery week doesn't mean doing nothing. It means letting adaptation happen."),
+        mk('m-rbi','bike',I,'Recovery Ride',      'Z1–Z2','50m',   40,"Active recovery on the bike. Genuinely easy — this helps your legs recover from the run load without adding stress."),
+        mk('m-rsw','swim',I,'Swim Maintenance',   'Z1–Z2','35m',   30,"Keep the habit. Easy aerobic work only — no intervals, no pace targets."),
+        mk('m-rjg','run', O,'Short Jog',          'Z1',   '25m',   20,"Optional easy jog. Only if legs feel fresh. Drop it if there's any fatigue."),
+      ];
+      return [ // build
+        mk('m-lr','run', K,'Long Run',            'Z2',   '1h 45m',90,"Your most important training session. Build progressively towards 30–32 km over the phase. Conversational pace throughout — HR should stay in Z2 the whole time, even when tired.","Fuel every 40–45 min. Protein within 30 min of finishing. This session makes or breaks marathons."),
+        mk('m-te','run', K,'Tempo Run',           'Z3–Z4','50m',   40,"15 min easy warm-up. 20–25 min at your marathon goal pace or slightly faster. 10 min easy cool-down. This should feel controlled-hard, not suffering.","If HR climbs above Z4, ease off immediately. The point is to practise marathon effort, not to blow up."),
+        mk('m-ml','run', I,'Medium Long Run',     'Z2',   '1h 15m',70,"The bridging session between your tempo and your long run. Easy effort — builds weekly run volume without accumulated fatigue."),
+        mk('m-rb','bike',I,'Recovery Ride',       'Z1–Z2','1h',    55,"Active recovery on the bike. Genuinely easy — helps your running legs recover and stay supple between run sessions."),
+        mk('m-sw','swim',I,'Swim Maintenance',    'Z1–Z2','40m',   35,"Keep the swim habit alive. Easy aerobic work only — maintain the base for Half IM later."),
+        mk('m-or','run', O,'Optional Easy Run',   'Z1',   '30m',   25,"Only if your legs feel genuinely good. This is volume cream, not the cake."),
+      ];
+
+    // ── PHASE 2: Prague Marathon Taper ────────────────────────
     case 2: return [
-      mk('pt-er','run', K,'Easy Shakeout Run', 'Z1–Z2', '35m', 30, "Feel the legs out. Nothing heroic.", "Race week: lay out your kit. Nothing new on race day."),
-      mk('pt-te','run', K,'Short Tempo',       'Z3',    '30m', 25, "10 min warm-up, 10 min at marathon pace, 10 min easy. Just staying tuned.", "This is to feel sharp, not to create fatigue."),
-      mk('pt-sp','bike',O,'Easy Spin',          'Z1',    '40m', 35, "Flush the legs pre-race. No efforts at all."),
+      mk('pt-er','run', K,'Easy Shakeout Run',   'Z1–Z2','35m',   30,"Feel the legs out. Nothing heroic — short, easy, finish feeling like you could go again. Every run this week should leave you feeling better than when you started.","Race week ritual: lay out your kit the day before. Nothing new on race day — shoes, socks, nutrition, all proven."),
+      mk('pt-te','run', K,'Short Tempo',         'Z3',   '30m',   25,"10 min warm-up, 10 min at marathon goal pace, 10 min easy. You're staying sharp, not creating fatigue. This should feel comfortable at race pace.","Trust the work you've done. Your fitness is built — this week you're just staying tuned."),
+      mk('pt-sp','bike',O,'Leg Flush Spin',      'Z1',   '40m',   35,"Very easy spin — this is purely to move blood through the legs, not training. If you feel flat afterwards, skip it next time."),
     ];
-    case 3: return [
-      mk('rb-lr','bike',K,"Long Ride",           'Z2',    '3h',     160, "Build towards L'Étape. Include some climbing if possible.", "Fuel 60–80g carbs/hour. Test your race-day nutrition here."),
-      mk('rb-in','bike',K,'Bike Intervals',      'Z3–Z4', '1h 15m', 70,  "3 × 10 min at Z3–Z4 power, 5 min easy between. Builds power for a long mountain stage."),
-      mk('rb-ru','run', I,'Easy Run',            'Z2',    '45m',    40,  "Maintain your run base. Conversational effort."),
-      mk('rb-sw','swim',I,'Swim',                'Z1–Z2', '45m',    40,  "Keep the swim habit going for Half IM later."),
-    ];
+
+    // ── PHASE 3: Recovery + Bike Focus ────────────────────────
+    case 3:
+      if(weekType==='recovery') return [
+        mk('rb-rm','bike',I,'Moderate Ride',      'Z2',   '1h 30m',80,"Solid aerobic ride but no intensity. HR stays in Z2 throughout. Think of this as consolidating the fitness from the build weeks."),
+        mk('rb-rr','run', I,'Easy Run',           'Z1–Z2','35m',   30,"Maintain your run base. Completely easy — you just ran a marathon, the bike is the priority now."),
+        mk('rb-rs','swim',I,'Swim',               'Z1',   '35m',   30,"Easy laps or drill work. Habit maintenance."),
+      ];
+      return [ // build
+        mk('rb-lr','bike',K,'Long Ride',          'Z2',   '3h',    160,"The cornerstone session of this phase. Build towards the 130 km L'Étape distance. Include climbing if you can. Nutrition every 30–40 min — 60–80g carbs per hour.","This is also where you dial in race-day fuelling. Find your exact product and timing now."),
+        mk('rb-in','bike',K,'Bike Intervals',     'Z3–Z4','1h 15m',70,"Warm-up 15 min. Then 3 × 10 min at Z3–Z4 power (87–105% FTP), 5 min easy spinning between. Cool down 10 min. Builds the sustained power needed for a long mountain stage.","Keep cadence above 85 rpm during intervals. If power drops, reduce duration not intensity."),
+        mk('rb-te','bike',I,'Threshold Efforts',  'Z3',   '1h',    55,"Steady ride with 2 × 20 min at Z3 (75–87% FTP). These longer efforts build the fatigue resistance for L'Étape."),
+        mk('rb-ru','run', I,'Easy Run',           'Z2',   '45m',   40,"Maintain your run base. Conversational effort. Running off the bike isn't the goal right now — just keeping the legs honest."),
+        mk('rb-sw','swim',I,'Swim',               'Z1–Z2','45m',   40,"Keep the swim habit going. Easy aerobic work — you'll need this base when Half IM Build starts in June."),
+      ];
+
+    // ── PHASE 4: L'Étape Taper ────────────────────────────────
     case 4: return [
-      mk('et-ri','bike',K,'Easy Spin + Surges',  'Z1–Z2', '45m', 40, "30 min easy, then 4 × 30 sec surges to feel sharp.", "Legs should feel springy — if not, extra rest is smarter."),
-      mk('et-ac','bike',I,'Activation Ride',      'Z2',    '25m', 20, "Day before: 20 min easy, 3 × 1 min at race pace, 4 min easy. Done."),
+      mk('et-ri','bike',K,'Easy Spin + Surges',  'Z1–Z2','45m',   40,"30 min easy at 90+ rpm, then 4 × 30 sec surges to race pace to wake the legs up. Finish easy. Legs should feel springy.","If the legs feel flat or heavy, skip the surges and just spin. Extra rest is always the smarter call in taper week."),
+      mk('et-ac','bike',I,'Day-Before Activation','Z2',  '25m',   20,"20 min easy spin, then 3 × 1 min at race climbing pace, 4 min easy. That's it. Pack your bag, eat your carbs.","Everything you need is already in your legs. This ride just reminds them what's coming."),
     ];
-    case 5: return [
-      mk('h-br','bike',K,'Brick Session',   'Z2–Z3',     '2h + 20m run', 100, "60–90 min at Z2 bike, last 20 min push to Z3. Straight into 15–20 min Z2 run.", "The first 5 min of the run will feel horrible — that is completely normal."),
-      mk('h-lr','run', K,'Long Run',        'Z2',         '1h 30m',       85,  "Building towards the HIM run leg. Keep HR in Z2 despite accumulated fatigue."),
-      mk('h-lb','bike',K,'Long Ride',       'Z2',         '2h 30m–3h',   140,  "Steady bike base for the 90 km HIM leg. Nutrition practice every session."),
-      mk('h-sw','swim',K,'Longer Swim',     'Z2',         '1h',           55,  "Build to 2000–2500m. Steady pace sets. Practice sighting and bilateral breathing.", "If you can get to open water, prioritise it."),
-      mk('h-ru','run', I,'Easy Run',        'Z2',         '45m',          40,  "Mid-week run to maintain volume."),
-      mk('h-os','swim',O,'Short Swim',      'Z1',         '35m',          30,  "Technique focus or easy aerobic."),
-    ];
+
+    // ── PHASE 5: Half IM Build ─────────────────────────────────
+    case 5:
+      if(weekType==='recovery') return [
+        mk('h-rbi','bike',I,'Moderate Ride',      'Z2',   '1h 30m',80,"Steady aerobic ride, no intensity. HR in Z2 throughout. Think of this as consolidating the brick and long-ride fitness from the build block."),
+        mk('h-rru','run', I,'Easy Run',           'Z1–Z2','50m',   40,"Comfortable and conversational. This keeps your run legs ticking over without digging into the recovery."),
+        mk('h-rsw','swim',I,'Swim',               'Z1–Z2','45m',   40,"Steady aerobic laps or technique focus. No intervals — just maintain the swim base."),
+        mk('h-ros','run', O,'Short Shakeout',     'Z1',   '25m',   20,"Optional. Only if you feel genuinely fresh. Skip without guilt."),
+      ];
+      return [ // build
+        mk('h-br','bike',K,'Brick Session',       'Z2–Z3','2h bike + 20m run',100,"The key HIM session. 60–80 min Z2 on the bike, final 20 min push into Z3. Rack the bike and run immediately — 15–20 min at Z2 run pace. This teaches your legs to run when they're already tired.","The first 5 min of the run will feel horrible. That is completely normal and exactly what you're training. It gets easier."),
+        mk('h-lb','bike',K,'Long Ride',           'Z2',   '2h 30m–3h',140,"Steady bike base for the 90 km HIM leg. Every session, practise nutrition: 60–80g carbs/hour, sip every 15 min. Don't wait until you're hungry.","Open water or windy conditions? Even better — race conditions are training."),
+        mk('h-lr','run', K,'Long Run',            'Z2',   '1h 30m',85,"Building towards the HIM 21 km run. Keep HR in Z2 the whole time — this is non-negotiable. If it creeps up, slow down, don't push through."),
+        mk('h-sw','swim',K,'Longer Swim',         'Z2',   '1h',    55,"Build to 2000–2500m this phase. Steady pace sets — 4 × 400m with 30 sec rest. Practise sighting every 10 strokes if in open water.","Prioritise open water if you can access it. Pool fitness doesn't fully translate to the chaos of a race start."),
+        mk('h-ru','run', I,'Mid-Week Easy Run',   'Z2',   '45m',   40,"Mid-week run to maintain volume. Easy aerobic effort."),
+        mk('h-os','swim',O,'Short Swim',          'Z1',   '35m',   30,"Technique focus or easy aerobic laps. Optional but the more you swim the better."),
+      ];
+
+    // ── PHASE 6: Zell am See Taper ────────────────────────────
     case 6: return [
-      mk('ht-sw','swim',K,'Race Pace Swim',      'Z3',    '40m', 35, "Warm up, then 3 × 300m at target HIM swim pace. Cool down."),
-      mk('ht-bi','bike',K,'Easy Ride + Efforts', 'Z1–Z2', '45m', 40, "Easy ride with 3 × 3 min at Z3 to stay sharp."),
-      mk('ht-ru','run', I,'Easy Run',            'Z1–Z2', '30m', 25, "Comfortable and easy. The hay is in the barn."),
+      mk('ht-sw','swim',K,'Race Pace Swim',       'Z3',   '40m',   35,"Easy warm-up (400m), then 3 × 300m at your target HIM swim pace with 30 sec rest. Cool down 200m easy. You're confirming your pacing, not chasing fitness.","The hay is in the barn. These sessions are about confidence and sharpness, nothing more."),
+      mk('ht-bi','bike',K,'Easy Ride + Efforts',  'Z1–Z2','45m',   40,"30 min easy, then 3 × 3 min at HIM race watts (just above Z2), 3 min easy. This keeps the neuromuscular system awake without creating fatigue."),
+      mk('ht-ru','run', I,'Easy Run',             'Z1–Z2','30m',   25,"Comfortable and easy. Stay off your feet otherwise. Sleep, eat, hydrate. You are ready."),
     ];
-    case 7: return [
-      mk('im-lb','bike',K,'Long Ride',      'Z2', '4h+',             220, "Cornerstone Ironman session. Ride at race pace. Nutrition is training — 80–90g carbs/hour.", "Tired after? Good. That is what race day feels like."),
-      mk('im-lr','run', K,'Long Run',       'Z2', '2h',              110, "Easy long run. These slow miles build the durability to survive the Ironman run."),
-      mk('im-br','bike',K,'Brick',          'Z2', '2h + 30m run',   120, "Race-simulation brick. Bike at race watts, run at race pace. Practice transitions."),
-      mk('im-sw','swim',K,'Long Swim',      'Z2', '1h 15m',          70, "Build to 3500–4000m. Race-pace sets: 5 × 400m with short rest."),
-      mk('im-mr','run', I,'Mid-Week Run',   'Z2', '1h',              55, "Steady aerobic run."),
-      mk('im-os','swim',O,'Recovery Swim',  'Z1', '40m',             35, "Easy laps or technique work."),
-    ];
+
+    // ── PHASE 7: Full IM Build ─────────────────────────────────
+    case 7:
+      if(weekType==='recovery') return [
+        mk('im-rbi','bike',I,'Moderate Long Ride','Z2',   '2h',    110,"Cut the long ride significantly. Still a proper ride but no intensity — HR in Z2, cadence up, just moving the legs through the base."),
+        mk('im-rru','run', I,'Easy Run',          'Z2',   '1h',    55,"Steady and conversational. This is one of your most important runs of the block — it allows the adaptation from the build weeks to consolidate.","Ironman training: you get fit in the build weeks, you absorb it in recovery. Don't skip the recovery."),
+        mk('im-rsw','swim',I,'Swim',              'Z1–Z2','50m',   45,"Easy to moderate pace. No hard sets. This is the week to focus on technique rather than fitness."),
+        mk('im-ros','run', O,'Short Jog',         'Z1',   '30m',   25,"Optional easy jog. Skip if legs feel heavy."),
+      ];
+      return [ // build
+        mk('im-lb','bike',K,'Long Ride',          'Z2',   '4h+',   220,"The cornerstone Ironman session. Build towards 5–5.5h. Ride at race watts (65–75% FTP) and practise nutrition obsessively — 80–90g carbs/hour. If you can't fuel on the bike, you won't run the marathon.","Tired legs after? Good. That's exactly what it feels like at km 120 on race day. You're training for that."),
+        mk('im-br','bike',K,'Brick Session',      'Z2',   '2h bike + 30m run',120,"Race-simulation brick. Bike at race watts for 2h, then straight into a 25–30 min run at target IM run pace. Practise your T2 transition. This session teaches everything.","Walk through T2 in your head every time. Helmet off, shoes on, visor on. Automate it."),
+        mk('im-lr','run', K,'Long Run',           'Z2',   '2h',    110,"Slow, easy, relentless. These long miles at Z2 build the durability to survive the IM marathon. Never let HR climb into Z3 — if you're running on tired legs and it drifts up, walk immediately."),
+        mk('im-sw','swim',K,'Long Swim',          'Z2',   '1h 15m',70,"Build to 3500–4000m over this phase. Race-pace main set: 5 × 400m with 20 sec rest. Practise your race-day warm-up routine."),
+        mk('im-mr','run', I,'Mid-Week Run',       'Z2',   '1h',    55,"Steady aerobic run. Easy effort — this is volume, not quality."),
+        mk('im-os','swim',O,'Recovery Swim',      'Z1',   '40m',   35,"Easy laps or technique work. Optional but swim frequency compounds."),
+      ];
+
+    // ── PHASE 8: ICAN Gandia Taper ────────────────────────────
     case 8: return [
-      mk('it-sw','swim',K,'Swim Race Prep',      'Z2–Z3', '40m', 35, "Easy swim with some race-pace efforts. Stay loose."),
-      mk('it-bi','bike',K,'Easy Ride + Pickups', 'Z1–Z2', '45m', 40, "Comfortable spin with 4 × 1 min at Z3. Just waking the legs up."),
-      mk('it-ru','run', I,'Short Jog',           'Z1',    '25m', 20, "10 min out, 10 min back. Minimal. You are ready."),
+      mk('it-sw','swim',K,'Swim Race Prep',       'Z2–Z3','40m',   35,"Easy 400m warm-up. 3 × 200m at race pace with 20 sec rest. 200m easy cool-down. You're confirming your stroke feels clean and your pacing is dialled.","Eat. Sleep. Drink water. Your fitness is locked in — the taper is just letting it surface."),
+      mk('it-bi','bike',K,'Easy Ride + Pickups',  'Z1–Z2','45m',   40,"30 min easy spin at 90+ rpm, then 4 × 1 min at race watts, 3 min easy. Legs should feel light and responsive. If they don't, more rest is the answer."),
+      mk('it-ru','run', I,'Short Jog',            'Z1',   '25m',   20,"10 min out, 10 min back. Nothing more. You are ready. The Ironman is yours to execute, not to train for anymore.","Pack your transition bags. Visualise the race. Trust the work."),
     ];
+
     default: return [];
   }
 }
@@ -1088,7 +1144,7 @@ function renderPlan() {
     const cardId=`week-card-${offset+2}`;
     const isOpen=isCurrent;
 
-    const sessions=getSessions(phaseIdx);
+    const sessions=getSessions(phaseIdx, wType);
     // One-to-one matching: one activity → one session tick, no double-counting
     const doneIds=matchSessionsToActivities(sessions, monday);
     const sessionCards=sessions.map(s=>{
