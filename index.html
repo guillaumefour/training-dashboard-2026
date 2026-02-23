@@ -1004,13 +1004,25 @@ function weekHrs(monday) {
   return activities.filter(a=>{const d=new Date(a.date);return d>=ws&&d<we;})
     .reduce((t,a)=>t+a.elapsed/3600,0);
 }
-function sessionDoneInWeek(session,monday) {
+// One-to-one greedy matching: each activity satisfies at most one session.
+// Sessions processed hardest-first; for each, the shortest qualifying
+// unmatched activity is consumed. Returns a Set of done session IDs.
+function matchSessionsToActivities(sessions, monday) {
   const ws=new Date(monday); ws.setHours(0,0,0,0);
   const we=new Date(ws); we.setDate(ws.getDate()+7);
-  return activities.some(a=>{
-    const d=new Date(a.date);
-    return d>=ws&&d<we&&a.sport===session.sport&&(a.elapsed/60)>=session.minMins*0.75;
-  });
+  const pool=activities
+    .filter(a=>{const d=new Date(a.date);return d>=ws&&d<we;})
+    .map(a=>({sport:a.sport, mins:a.elapsed/60, used:false}));
+  const sorted=[...sessions].sort((a,b)=>b.minMins-a.minMins);
+  const done=new Set();
+  for(const s of sorted){
+    const cands=pool.filter(a=>!a.used&&a.sport===s.sport&&a.mins>=s.minMins*0.75);
+    if(!cands.length) continue;
+    cands.sort((a,b)=>a.mins-b.mins);
+    cands[0].used=true;
+    done.add(s.id);
+  }
+  return done;
 }
 function phaseForDate(dateStr) {
   for(let i=0;i<SEASON_PHASES.length;i++)
@@ -1049,11 +1061,17 @@ function renderPlan() {
     </div>
   </div>`;
 
-  // Build 8-week window: 2 past + current + 5 future
-  for(let offset=-2;offset<=5;offset++){
+  // Range: 2 past weeks → last day of final season phase
+  const seasonEnd=new Date(SEASON_PHASES[SEASON_PHASES.length-1].end);
+  const weeksToEnd=Math.ceil((seasonEnd-todayMonday)/(7*86400000));
+  const maxOffset=Math.max(weeksToEnd, 5);
+
+  for(let offset=-2;offset<=maxOffset;offset++){
     const monday=new Date(todayMonday); monday.setDate(todayMonday.getDate()+offset*7);
     const sunday=new Date(monday); sunday.setDate(monday.getDate()+6);
     const mondayStr=monday.toISOString().slice(0,10);
+    // Stop once we're past the season end
+    if(monday>seasonEnd) break;
 
     const isCurrent=offset===0, isPast=offset<0;
     const phaseIdx=phaseForDate(mondayStr);
@@ -1071,8 +1089,10 @@ function renderPlan() {
     const isOpen=isCurrent;
 
     const sessions=getSessions(phaseIdx);
+    // One-to-one matching: one activity → one session tick, no double-counting
+    const doneIds=matchSessionsToActivities(sessions, monday);
     const sessionCards=sessions.map(s=>{
-      const done=sessionDoneInWeek(s,monday);
+      const done=doneIds.has(s.id);
       const missed=isPast&&!done;
       const zoneStr=s.zone?s.zone.split(/[,–]/).map(z=>`<span class="zone-chip">${z.trim()}</span>`).join(''):'';
       return `<div class="session-card ${s.priority}${done?' done':missed?' missed':''}">
