@@ -106,6 +106,7 @@ tr:hover td{background:var(--surface2)}
 .week-badge.build{background:rgba(6,182,212,.15);color:var(--bike)}
 .week-badge.recovery{background:rgba(34,197,94,.15);color:var(--green)}
 .week-badge.taper{background:rgba(245,158,11,.15);color:var(--imp)}
+.week-badge.raceweek{background:rgba(239,68,68,.15);color:var(--key)}
 .progress-wrap{margin-top:10px}
 .progress-wrap label{font-size:.75rem;color:var(--muted);margin-bottom:4px;display:block}
 .progress-bar{height:6px;background:var(--surface2);border-radius:3px;overflow:hidden}
@@ -407,15 +408,15 @@ function getBikeZones(ftp) {
 //  SEASON PHASES
 // ══════════════════════════════════════════════════════════════
 const SEASON_PHASES = [
-  { name:'Base Building',          start:'2026-01-05', end:'2026-03-08', targetHrs:7,  recoveryAt:4,    taperAt:null, focus:"Building aerobic base across all three sports. Keep everything easy and conversational." },
-  { name:'Marathon Build',         start:'2026-03-09', end:'2026-04-19', targetHrs:8,  recoveryAt:4,    taperAt:null, focus:"Increase run volume. Introduce quality sessions. Maintain bike and swim fitness." },
-  { name:'Prague Marathon Taper',  start:'2026-04-20', end:'2026-05-03', targetHrs:5,  recoveryAt:null, taperAt:0,    focus:"Reduce volume, keep some sharpness. Trust your training. Stay off your feet." },
-  { name:"Recovery + Bike Focus",  start:'2026-05-04', end:'2026-06-14', targetHrs:8,  recoveryAt:3,    taperAt:null, focus:"Recover from Prague. Shift emphasis to cycling for L'Étape. Maintain swim base." },
-  { name:"L'Étape Taper",          start:'2026-06-15', end:'2026-06-20', targetHrs:4,  recoveryAt:null, taperAt:0,    focus:"Short, sharp efforts. Legs fresh. Stay calm and confident." },
-  { name:'Half IM Build',          start:'2026-06-21', end:'2026-08-23', targetHrs:10, recoveryAt:3,    taperAt:null, focus:"Full triathlon training. Brick sessions, open water, build all three sports." },
-  { name:'Zell am See Taper',      start:'2026-08-24', end:'2026-08-30', targetHrs:5,  recoveryAt:null, taperAt:0,    focus:"Cut volume sharply. Race-pace sharpeners only. Sleep and eat well." },
-  { name:'Full IM Build',          start:'2026-08-31', end:'2026-10-10', targetHrs:11, recoveryAt:3,    taperAt:null, focus:"Big endurance weeks. Long rides, long runs, bricks. Practice race nutrition obsessively." },
-  { name:'ICAN Gandia Taper',      start:'2026-10-11', end:'2026-10-17', targetHrs:4,  recoveryAt:null, taperAt:0,    focus:"Trust the work. Rest, sleep, eat. You are ready." },
+  { name:'Base Building',          start:'2026-01-05', end:'2026-03-08', targetHrs:7,  recoveryAt:4,    taperAt:null, startsWithRecovery:false, focus:"Building aerobic base across all three sports. Keep everything easy and conversational." },
+  { name:'Marathon Build',         start:'2026-03-09', end:'2026-04-19', targetHrs:8,  recoveryAt:4,    taperAt:null, startsWithRecovery:false, focus:"Increase run volume. Introduce quality sessions. Maintain bike and swim fitness." },
+  { name:'Prague Marathon Taper',  start:'2026-04-20', end:'2026-05-03', targetHrs:5,  recoveryAt:null, taperAt:0,    startsWithRecovery:false, focus:"Reduce volume, keep some sharpness. Trust your training. Stay off your feet." },
+  { name:"Recovery + Bike Focus",  start:'2026-05-04', end:'2026-06-14', targetHrs:8,  recoveryAt:3,    taperAt:null, startsWithRecovery:true,  focus:"Recover from Prague before shifting to the bike. Week 1 is mandatory rest — your body just ran a marathon." },
+  { name:"L'Étape Taper",          start:'2026-06-15', end:'2026-06-20', targetHrs:4,  recoveryAt:null, taperAt:0,    startsWithRecovery:false, focus:"Short, sharp efforts. Legs fresh. Stay calm and confident." },
+  { name:'Half IM Build',          start:'2026-06-21', end:'2026-08-23', targetHrs:10, recoveryAt:3,    taperAt:null, startsWithRecovery:false, focus:"Full triathlon training. Brick sessions, open water, build all three sports." },
+  { name:'Zell am See Taper',      start:'2026-08-24', end:'2026-08-30', targetHrs:5,  recoveryAt:null, taperAt:0,    startsWithRecovery:false, focus:"Cut volume sharply. Race-pace sharpeners only. Sleep and eat well." },
+  { name:'Full IM Build',          start:'2026-08-31', end:'2026-10-10', targetHrs:11, recoveryAt:3,    taperAt:null, startsWithRecovery:true,  focus:"Recover from Zell am See before the final Ironman build. Week 1 is recovery — you just raced a half. The big work starts in week 2." },
+  { name:'ICAN Gandia Taper',      start:'2026-10-11', end:'2026-10-17', targetHrs:4,  recoveryAt:null, taperAt:0,    startsWithRecovery:false, focus:"Trust the work. Rest, sleep, eat. You are ready." },
 ];
 
 function mk(id,sport,priority,title,zone,dur,minMins,desc,tip='') {
@@ -463,11 +464,20 @@ function getSessions(phaseIdx, weekType) {
       ];
 
     // ── PHASE 2: Prague Marathon Taper ────────────────────────
-    case 2: return [
-      mk('pt-er','run', K,'Easy Shakeout Run',   'Z1–Z2','35m',   30,"Feel the legs out. Nothing heroic — short, easy, finish feeling like you could go again. Every run this week should leave you feeling better than when you started.","Race week ritual: lay out your kit the day before. Nothing new on race day — shoes, socks, nutrition, all proven."),
-      mk('pt-te','run', K,'Short Tempo',         'Z3',   '30m',   25,"10 min warm-up, 10 min at marathon goal pace, 10 min easy. You're staying sharp, not creating fatigue. This should feel comfortable at race pace.","Trust the work you've done. Your fitness is built — this week you're just staying tuned."),
-      mk('pt-sp','bike',O,'Leg Flush Spin',      'Z1',   '40m',   35,"Very easy spin — this is purely to move blood through the legs, not training. If you feel flat afterwards, skip it next time."),
-    ];
+    // Week 1 of a 2-week taper = 'taper' (early taper: cut volume, keep one quality session)
+    // Week 2 = 'race-week' (minimal volume, pure race prep psychology)
+    case 2:
+      if(weekType==='taper') return [
+        mk('pt-tr','run', K,'Reduced Long Run',    'Z2',   '55m',   45,"Cut your long run to 55–60 min this week. Easy Z2 throughout. The goal is to keep the aerobic stimulus without accumulating fatigue. Finish feeling fresh.","Think of this as your last significant run before Prague. Make it count — then rest."),
+        mk('pt-tt','run', K,'Tune-Up Tempo',       'Z3',   '40m',   30,"10 min easy warm-up. 15–18 min at marathon goal pace. 10 min easy cool-down. This is about confirming your race pace feels controlled, not creating fitness.","If it feels hard, you're going too fast. Marathon pace at this point should feel like 'comfortably uncomfortable'."),
+        mk('pt-tb','bike',I,'Easy Aerobic Ride',   'Z1–Z2','50m',   40,"30–50 min easy. Just staying active, not training. This keeps your legs moving without adding any load."),
+        mk('pt-ts','swim',O,'Short Swim',          'Z1',   '30m',   25,"Easy 20–30 min swim. Relaxed, no effort. Can skip if you're feeling fatigued."),
+      ];
+      return [ // race-week
+        mk('pt-er','run', K,'Easy Shakeout Run',   'Z1–Z2','35m',   28,"Short and easy — finish feeling like you could go again. This is about waking up the legs, not adding fitness. Run the first half of any route twice rather than running somewhere new.","Lay out your race kit today if you haven't. Nutrition plan written and confirmed. Nothing new on race day."),
+        mk('pt-te','run', K,'Short Marathon Pace', 'Z3',   '25m',   20,"10 min easy warm-up, just 8–10 min at marathon goal pace, 8 min cool-down. The purpose is neurological, not physiological — you're reminding your body what race pace feels like.","This should feel surprisingly comfortable. If it doesn't, you've been going out too fast in training."),
+        mk('pt-sp','bike',O,'Leg Flush Spin',      'Z1',   '30m',   25,"Very easy spin 2–3 days before the race. Blood through the legs only. If you feel flat during or after, skip it on future tapers."),
+      ];
 
     // ── PHASE 3: Recovery + Bike Focus ────────────────────────
     case 3:
@@ -484,10 +494,10 @@ function getSessions(phaseIdx, weekType) {
         mk('rb-sw','swim',I,'Swim',               'Z1–Z2','45m',   40,"Keep the swim habit going. Easy aerobic work — you'll need this base when Half IM Build starts in June."),
       ];
 
-    // ── PHASE 4: L'Étape Taper ────────────────────────────────
-    case 4: return [
-      mk('et-ri','bike',K,'Easy Spin + Surges',  'Z1–Z2','45m',   40,"30 min easy at 90+ rpm, then 4 × 30 sec surges to race pace to wake the legs up. Finish easy. Legs should feel springy.","If the legs feel flat or heavy, skip the surges and just spin. Extra rest is always the smarter call in taper week."),
-      mk('et-ac','bike',I,'Day-Before Activation','Z2',  '25m',   20,"20 min easy spin, then 3 × 1 min at race climbing pace, 4 min easy. That's it. Pack your bag, eat your carbs.","Everything you need is already in your legs. This ride just reminds them what's coming."),
+    // ── PHASE 4: L'Étape Taper (single week = always race-week) ──
+    case 4: return [ // taper or race-week (same content — single-week phase)
+      mk('et-ri','bike',K,'Easy Spin + Surges',   'Z1–Z2','45m',   38,"30 min easy at 90+ rpm, then 4 × 30 sec surges to race pace to wake the legs up. Finish easy. Legs should feel springy — if they don't, drop the surges.","Carb load starts today. Target 8–10g carbs per kg body weight over the last 2 days."),
+      mk('et-ac','bike',I,'Day-Before Activation','Z2',  '25m',   20,"20 min easy spin, 3 × 1 min at race climbing pace, 4 min easy. Done. Bike checked and packed. Nothing left to do but eat and sleep.","Everything you need is already in your legs. This ride just reminds them what's coming."),
     ];
 
     // ── PHASE 5: Half IM Build ─────────────────────────────────
@@ -507,11 +517,11 @@ function getSessions(phaseIdx, weekType) {
         mk('h-os','swim',O,'Short Swim',          'Z1',   '35m',   30,"Technique focus or easy aerobic laps. Optional but the more you swim the better."),
       ];
 
-    // ── PHASE 6: Zell am See Taper ────────────────────────────
-    case 6: return [
-      mk('ht-sw','swim',K,'Race Pace Swim',       'Z3',   '40m',   35,"Easy warm-up (400m), then 3 × 300m at your target HIM swim pace with 30 sec rest. Cool down 200m easy. You're confirming your pacing, not chasing fitness.","The hay is in the barn. These sessions are about confidence and sharpness, nothing more."),
-      mk('ht-bi','bike',K,'Easy Ride + Efforts',  'Z1–Z2','45m',   40,"30 min easy, then 3 × 3 min at HIM race watts (just above Z2), 3 min easy. This keeps the neuromuscular system awake without creating fatigue."),
-      mk('ht-ru','run', I,'Easy Run',             'Z1–Z2','30m',   25,"Comfortable and easy. Stay off your feet otherwise. Sleep, eat, hydrate. You are ready."),
+    // ── PHASE 6: Zell am See Taper (single week = always race-week) ──
+    case 6: return [ // taper or race-week (same content — single-week phase)
+      mk('ht-sw','swim',K,'Race Pace Swim',        'Z3',   '40m',   33,"Warm up 400m easy. Then 3 × 300m at your target HIM swim pace — count strokes, breathe bilaterally. Cool down 200m. You're calibrating, not training.","The hay is in the barn. Pack your transition bags today — T1 and T2 fully sorted before race day."),
+      mk('ht-bi','bike',K,'Easy Ride + Efforts',   'Z1–Z2','45m',   38,"30 min easy at 90+ rpm, then 3 × 3 min at HIM race watts (Z2/Z3 border), 3 min easy. Legs should feel sharp and responsive.","Check your race-day nutrition is ready. Every gel, bar and bottle pre-planned and accounted for."),
+      mk('ht-ru','run', I,'Easy Run',              'Z1–Z2','25m',   20,"20–25 min easy. The last run before your race. Stay off your feet otherwise. Sleep well, eat well, hydrate. You are ready."),
     ];
 
     // ── PHASE 7: Full IM Build ─────────────────────────────────
@@ -531,11 +541,11 @@ function getSessions(phaseIdx, weekType) {
         mk('im-os','swim',O,'Recovery Swim',      'Z1',   '40m',   35,"Easy laps or technique work. Optional but swim frequency compounds."),
       ];
 
-    // ── PHASE 8: ICAN Gandia Taper ────────────────────────────
-    case 8: return [
-      mk('it-sw','swim',K,'Swim Race Prep',       'Z2–Z3','40m',   35,"Easy 400m warm-up. 3 × 200m at race pace with 20 sec rest. 200m easy cool-down. You're confirming your stroke feels clean and your pacing is dialled.","Eat. Sleep. Drink water. Your fitness is locked in — the taper is just letting it surface."),
-      mk('it-bi','bike',K,'Easy Ride + Pickups',  'Z1–Z2','45m',   40,"30 min easy spin at 90+ rpm, then 4 × 1 min at race watts, 3 min easy. Legs should feel light and responsive. If they don't, more rest is the answer."),
-      mk('it-ru','run', I,'Short Jog',            'Z1',   '25m',   20,"10 min out, 10 min back. Nothing more. You are ready. The Ironman is yours to execute, not to train for anymore.","Pack your transition bags. Visualise the race. Trust the work."),
+    // ── PHASE 8: ICAN Gandia Taper (single week = always race-week) ──
+    case 8: return [ // taper or race-week (same content — single-week phase)
+      mk('it-sw','swim',K,'Swim Race Prep',        'Z2–Z3','40m',   33,"400m easy warm-up. 3 × 200m at race pace with 20 sec rest. 200m easy cool-down. You're confirming your stroke and your pacing, not adding fitness. Nothing else in the water this week.","Your fitness is locked in. The taper is just letting it rise to the surface. Trust the process."),
+      mk('it-bi','bike',K,'Easy Ride + Pickups',   'Z1–Z2','45m',   38,"30 min easy spin at 90+ rpm, then 4 × 1 min at race watts (65–70% FTP), 3 min easy. Legs should feel light and snappy. If they feel heavy, sit up and just spin — more rest is always the right answer.","Bags packed. Nutrition planned to the gram. You've done the training — the Ironman is yours to execute now, not to train for."),
+      mk('it-ru','run', I,'Short Jog',             'Z1',   '20m',   18,"10 min out, 10 min back. Nothing more. Walk if you want. Your last run before the Ironman should leave you feeling fresh and excited, not tired.","Visualise your race. Swim start, T1, the bike leg, T2, the run. Walk through every transition in your head. You are ready."),
     ];
 
     default: return [];
@@ -1042,8 +1052,16 @@ function getCurrentPhase() {
     if(today>=SEASON_PHASES[i].start&&today<=SEASON_PHASES[i].end) return i;
   return SEASON_PHASES.length-1;
 }
-function getWeekType(phase,weekNum) {
-  if(phase.taperAt!==null) return 'taper';
+function getWeekType(phase,weekNum,monday) {
+  if(phase.taperAt!==null) {
+    // Last week of a taper phase = race week (minimal volume, pure race prep)
+    // Any earlier weeks in a multi-week taper = early taper (some quality retained)
+    const phaseEnd=new Date(phase.end); phaseEnd.setHours(23,59,59,999);
+    const thisSunday=new Date(monday); thisSunday.setDate(monday.getDate()+6); thisSunday.setHours(23,59,59,999);
+    return thisSunday>=phaseEnd ? 'race-week' : 'taper';
+  }
+  // First week of a post-race phase is always enforced recovery
+  if(weekNum===1&&phase.startsWithRecovery) return 'recovery';
   if(phase.recoveryAt&&weekNum%phase.recoveryAt===0) return 'recovery';
   return 'build';
 }
@@ -1133,14 +1151,19 @@ function renderPlan() {
     const phaseIdx=phaseForDate(mondayStr);
     const phase=SEASON_PHASES[phaseIdx];
     const weekNum=weekNumInPhase(monday,phaseIdx);
-    const wType=getWeekType(phase,weekNum);
-    const targetHrs=wType==='recovery'?phase.targetHrs*.65:wType==='taper'?phase.targetHrs*.5:phase.targetHrs;
+    const wType=getWeekType(phase,weekNum,monday);
+    const targetHrs=wType==='recovery'?phase.targetHrs*.65
+                   :wType==='taper'?phase.targetHrs*.5
+                   :wType==='race-week'?phase.targetHrs*.35
+                   :phase.targetHrs;
     const doneHrs=weekHrs(monday);
     const pct=Math.min(100,Math.round(doneHrs/targetHrs*100));
 
     const fmtD=d=>d.toLocaleDateString('en-GB',{day:'numeric',month:'short'});
     const weekLabel=`${fmtD(monday)} – ${fmtD(sunday)}`;
-    const wTypeLabel={build:'Build',recovery:'Recovery',taper:'Taper'}[wType]||wType;
+    const wTypeLabel={build:'Build',recovery:'Recovery',taper:'Early Taper','race-week':'Race Week'}[wType]||wType;
+    // CSS class: 'race-week' → 'raceweek' to avoid hyphen issues
+    const wTypeCls={build:'build',recovery:'recovery',taper:'taper','race-week':'raceweek'}[wType]||'build';
     const cardId=`week-card-${offset+2}`;
     const isOpen=isCurrent;
 
@@ -1167,7 +1190,7 @@ function renderPlan() {
         <div class="wc-left">
           ${isCurrent?'<span class="current-week-badge">THIS WEEK</span>':''}
           <span class="wc-dates">${weekLabel}</span>
-          <span class="week-badge ${wType}">${wTypeLabel}</span>
+          <span class="week-badge ${wTypeCls}">${wTypeLabel}</span>
         </div>
         <div class="wc-right">
           <span class="wc-hrs">${fmtHrs(doneHrs*3600)} / ~${targetHrs.toFixed(0)}h</span>
