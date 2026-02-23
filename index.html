@@ -128,6 +128,26 @@ tr:hover td{background:var(--surface2)}
 .zone-chips{display:flex;gap:4px;flex-wrap:wrap}
 .zone-chip{font-size:.65rem;padding:2px 7px;border-radius:10px;background:var(--surface2);border:1px solid var(--border);color:var(--muted)}
 
+/* MULTI-WEEK CARDS */
+.week-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:10px;overflow:hidden;transition:border-color .2s}
+.week-card.current{border-color:var(--bike)}
+.week-card.past{opacity:.7}
+.week-card-header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;cursor:pointer;user-select:none;gap:12px;flex-wrap:wrap}
+.week-card-header:hover{background:var(--surface2)}
+.wc-left{display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0}
+.wc-right{display:flex;align-items:center;gap:10px;flex-shrink:0}
+.wc-dates{font-size:.85rem;font-weight:600;white-space:nowrap}
+.current-week-badge{background:var(--bike);color:#fff;font-size:.65rem;font-weight:700;padding:2px 8px;border-radius:20px;white-space:nowrap;letter-spacing:.05em}
+.wc-hrs{font-size:.78rem;color:var(--muted);white-space:nowrap}
+.wc-mini-bar{width:64px;height:5px;background:var(--surface2);border-radius:3px;overflow:hidden;flex-shrink:0}
+.wc-mini-fill{height:100%;background:var(--bike);border-radius:3px}
+.week-card.current .wc-mini-fill{background:var(--bike)}
+.week-card.past .wc-mini-fill{background:var(--green)}
+.wc-arrow{font-size:.7rem;color:var(--muted);width:14px;text-align:center;flex-shrink:0}
+.week-card-body{padding:0 12px 12px}
+.session-card.missed{opacity:.55;border-left-color:var(--key)!important}
+.session-card.missed::after{content:'✗ Missed';position:absolute;top:10px;right:12px;font-size:.7rem;color:var(--key);font-weight:700}
+
 /* IMPORT / STRAVA */
 .strava-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px 24px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
 .strava-box .sb-info h3{font-size:1rem;margin-bottom:4px}
@@ -971,62 +991,120 @@ function getWeekType(phase,weekNum) {
   if(phase.recoveryAt&&weekNum%phase.recoveryAt===0) return 'recovery';
   return 'build';
 }
-function weeksSince(dateStr) {
-  const start=new Date(dateStr); start.setHours(0,0,0,0);
-  const today=new Date(); today.setHours(0,0,0,0);
-  return Math.max(1,Math.ceil((today-start)/(7*86400000)));
+// ── Calendar-week helpers (replace rolling 7-day window) ──────
+function weekMonday(d) {
+  const dt=new Date(d); dt.setHours(0,0,0,0);
+  const day=dt.getDay();
+  dt.setDate(dt.getDate()-(day===0?6:day-1));
+  return dt;
 }
-function thisWeekHrs() {
-  const now=new Date(); now.setHours(23,59,59,999);
-  const cut=new Date(now); cut.setDate(now.getDate()-7);
-  return activities.filter(a=>{const d=new Date(a.date);return d>=cut&&d<=now;}).reduce((t,a)=>t+a.elapsed/3600,0);
+function weekHrs(monday) {
+  const ws=new Date(monday); ws.setHours(0,0,0,0);
+  const we=new Date(ws); we.setDate(ws.getDate()+7);
+  return activities.filter(a=>{const d=new Date(a.date);return d>=ws&&d<we;})
+    .reduce((t,a)=>t+a.elapsed/3600,0);
 }
-function isSessionDone(session) {
-  const now=new Date(); now.setHours(23,59,59,999);
-  const cut=new Date(now); cut.setDate(now.getDate()-7);
+function sessionDoneInWeek(session,monday) {
+  const ws=new Date(monday); ws.setHours(0,0,0,0);
+  const we=new Date(ws); we.setDate(ws.getDate()+7);
   return activities.some(a=>{
     const d=new Date(a.date);
-    return d>=cut&&d<=now&&a.sport===session.sport&&(a.elapsed/60)>=session.minMins*0.75;
+    return d>=ws&&d<we&&a.sport===session.sport&&(a.elapsed/60)>=session.minMins*0.75;
   });
 }
+function phaseForDate(dateStr) {
+  for(let i=0;i<SEASON_PHASES.length;i++)
+    if(dateStr>=SEASON_PHASES[i].start&&dateStr<=SEASON_PHASES[i].end) return i;
+  if(dateStr<SEASON_PHASES[0].start) return 0;
+  return SEASON_PHASES.length-1;
+}
+function weekNumInPhase(monday,phaseIdx) {
+  const phaseMonday=weekMonday(new Date(SEASON_PHASES[phaseIdx].start));
+  return Math.max(1,Math.round((monday-phaseMonday)/(7*86400000))+1);
+}
+function toggleWeekCard(id) {
+  const card=document.getElementById(id); if(!card) return;
+  const body=card.querySelector('.week-card-body');
+  const arrow=card.querySelector('.wc-arrow');
+  const isOpen=body.style.display!=='none';
+  body.style.display=isOpen?'none':'block';
+  if(arrow) arrow.textContent=isOpen?'▶':'▼';
+}
+
 function renderPlan() {
   const el=document.getElementById('plan-content'); if(!el) return;
-  const idx=getCurrentPhase(), phase=SEASON_PHASES[idx];
-  const weekNum=weeksSince(phase.start), wType=getWeekType(phase,weekNum);
-  const doneHrs=thisWeekHrs();
-  const target=wType==='recovery'?phase.targetHrs*.65:wType==='taper'?phase.targetHrs*.5:phase.targetHrs;
-  const pct=Math.min(100,Math.round(doneHrs/target*100));
-  const today=new Date().toISOString().slice(0,10);
-  const nextRace=RACES.find(r=>r.date>=today);
-  const sessions=getSessions(idx);
-  el.innerHTML=`
-    <div class="plan-header">
-      <h2>${phase.name}</h2><p>${phase.focus}</p>
-      <div class="plan-meta">
-        <span>Week <strong>${weekNum}</strong> of phase</span>
-        <span class="week-badge ${wType}">${wType.charAt(0).toUpperCase()+wType.slice(1)} week</span>
-        ${nextRace?`<span>Next race: <strong>${nextRace.name}</strong> — ${new Date(nextRace.date).toLocaleDateString('en-GB',{day:'numeric',month:'short'})}</span>`:''}
-      </div>
-      <div class="progress-wrap">
-        <label>This week: ${fmtHrs(doneHrs*3600)} of ~${target.toFixed(0)}h target (${pct}%)</label>
-        <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
-      </div>
+  const today=new Date(); today.setHours(0,0,0,0);
+  const todayStr=today.toISOString().slice(0,10);
+  const todayMonday=weekMonday(today);
+
+  // Phase summary banner for current phase
+  const curPhaseIdx=phaseForDate(todayStr);
+  const curPhase=SEASON_PHASES[curPhaseIdx];
+  const nextRace=RACES.find(r=>r.date>=todayStr);
+
+  let html=`<div class="plan-header">
+    <h2>${curPhase.name}</h2><p>${curPhase.focus}</p>
+    <div class="plan-meta">
+      ${nextRace?`<span>Next race: <strong>${nextRace.name}</strong> — ${new Date(nextRace.date).toLocaleDateString('en-GB',{day:'numeric',month:'short'})}</span>`:''}
     </div>
-    <div class="sessions-grid">
-      ${sessions.map(s=>{
-        const done=isSessionDone(s);
-        const zoneStr=s.zone?s.zone.split(/[,–]/).map(z=>`<span class="zone-chip">${z.trim()}</span>`).join(''):'';
-        return `<div class="session-card ${s.priority}${done?' done':''}">
-          <div class="sc-priority ${s.priority}">${s.priority==='key'?'● KEY SESSION':s.priority==='imp'?'● IMPORTANT':'○ OPTIONAL'}</div>
-          <div class="sc-sport ${s.sport}">${s.sport.toUpperCase()}</div>
-          <div class="sc-title">${s.title}</div>
-          <div class="sc-dur">⏱ ${s.dur}</div>
-          <div class="sc-desc">${s.desc}</div>
-          ${s.tip?`<div class="sc-tip">💡 ${s.tip}</div>`:''}
-          ${zoneStr?`<div class="zone-chips">${zoneStr}</div>`:''}
-        </div>`;
-      }).join('')}
+  </div>`;
+
+  // Build 8-week window: 2 past + current + 5 future
+  for(let offset=-2;offset<=5;offset++){
+    const monday=new Date(todayMonday); monday.setDate(todayMonday.getDate()+offset*7);
+    const sunday=new Date(monday); sunday.setDate(monday.getDate()+6);
+    const mondayStr=monday.toISOString().slice(0,10);
+
+    const isCurrent=offset===0, isPast=offset<0;
+    const phaseIdx=phaseForDate(mondayStr);
+    const phase=SEASON_PHASES[phaseIdx];
+    const weekNum=weekNumInPhase(monday,phaseIdx);
+    const wType=getWeekType(phase,weekNum);
+    const targetHrs=wType==='recovery'?phase.targetHrs*.65:wType==='taper'?phase.targetHrs*.5:phase.targetHrs;
+    const doneHrs=weekHrs(monday);
+    const pct=Math.min(100,Math.round(doneHrs/targetHrs*100));
+
+    const fmtD=d=>d.toLocaleDateString('en-GB',{day:'numeric',month:'short'});
+    const weekLabel=`${fmtD(monday)} – ${fmtD(sunday)}`;
+    const wTypeLabel={build:'Build',recovery:'Recovery',taper:'Taper'}[wType]||wType;
+    const cardId=`week-card-${offset+2}`;
+    const isOpen=isCurrent;
+
+    const sessions=getSessions(phaseIdx);
+    const sessionCards=sessions.map(s=>{
+      const done=sessionDoneInWeek(s,monday);
+      const missed=isPast&&!done;
+      const zoneStr=s.zone?s.zone.split(/[,–]/).map(z=>`<span class="zone-chip">${z.trim()}</span>`).join(''):'';
+      return `<div class="session-card ${s.priority}${done?' done':missed?' missed':''}">
+        <div class="sc-priority ${s.priority}">${s.priority==='key'?'● KEY SESSION':s.priority==='imp'?'● IMPORTANT':'○ OPTIONAL'}</div>
+        <div class="sc-sport ${s.sport}">${s.sport.toUpperCase()}</div>
+        <div class="sc-title">${s.title}</div>
+        <div class="sc-dur">⏱ ${s.dur}</div>
+        <div class="sc-desc">${s.desc}</div>
+        ${s.tip?`<div class="sc-tip">💡 ${s.tip}</div>`:''}
+        ${zoneStr?`<div class="zone-chips">${zoneStr}</div>`:''}
+      </div>`;
+    }).join('');
+
+    html+=`<div class="week-card ${isCurrent?'current':isPast?'past':'future'}" id="${cardId}">
+      <div class="week-card-header" onclick="toggleWeekCard('${cardId}')">
+        <div class="wc-left">
+          ${isCurrent?'<span class="current-week-badge">THIS WEEK</span>':''}
+          <span class="wc-dates">${weekLabel}</span>
+          <span class="week-badge ${wType}">${wTypeLabel}</span>
+        </div>
+        <div class="wc-right">
+          <span class="wc-hrs">${fmtHrs(doneHrs*3600)} / ~${targetHrs.toFixed(0)}h</span>
+          <div class="wc-mini-bar"><div class="wc-mini-fill" style="width:${pct}%"></div></div>
+          <span class="wc-arrow">${isOpen?'▼':'▶'}</span>
+        </div>
+      </div>
+      <div class="week-card-body" style="display:${isOpen?'block':'none'}">
+        <div class="sessions-grid">${sessionCards}</div>
+      </div>
     </div>`;
+  }
+  el.innerHTML=html;
 }
 
 // ══════════════════════════════════════════════════════════════
